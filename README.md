@@ -111,6 +111,19 @@ The file uses the dongle's program format (points with `minutes`, `UI`, `eid`,
 `scripts/natural_day.py` (the shape table at the top; channel amounts are scaled to
 a reference program) and draw it with `scripts/plot_program.py`.
 
+## Roadmap
+
+- **Program management**: back up and restore the dongle's programs, create,
+  rename and delete programs from Home Assistant, and edit the daily curve in the
+  card (e.g. to upload [Natural Day](#example-program-natural-day)).
+- **Generated daily program**: sunrise and sunset following the real sun times
+  and a random midday thunderstorm, written to the dongle once a day (so the
+  lamps keep running on their own if Home Assistant is down).
+- **Acclimation and moon phase** settings, which the dongle already reports.
+- **More lamp types**: Tuna Blue, A500X and Refugium are untested. If you own one,
+  please open an issue. Anonymised responses of the read-only commands in
+  [docs/PROTOCOL.md](docs/PROTOCOL.md) (102, 105, 106) are enough to start.
+
 ## Notes
 
 - The dongle's daily program runs on the dongle's own clock and time zone.
