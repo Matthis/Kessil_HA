@@ -5,40 +5,21 @@
  *   entity: light.default_ts      # the group's light entity
  *   name: Aquarium                # optional
  *
- * Colour, red, amber and mode entities are found automatically on the same
- * device (via their translation keys).
+ * Intensity, light color, red, amber and mode entities are found automatically
+ * on the same device (via their translation keys).
  */
 
 const DOMAIN = "kessil_dongle";
-const CARD_VERSION = "0.1.7";
+const CARD_VERSION = "0.1.8";
 
 const CHANNELS = [
+  { key: "intensity", label: { de: "Intensität", en: "Intensity" }, track: "linear-gradient(90deg,#16202c,#4fc3f7)", index: 0 },
   { key: "color", label: { de: "Lichtfarbe", en: "Light color" }, track: "linear-gradient(90deg,#ffe3a8,#ffffff,#8ecbff)", index: 1 },
   { key: "red", label: { de: "Rot", en: "Red" }, track: "linear-gradient(90deg,#3a1414,#e53935)", index: 3 },
   { key: "amber", label: { de: "Amber", en: "Amber" }, track: "linear-gradient(90deg,#3a2410,#f5761a)", index: 4 },
 ];
 
-const ARC_START = 135; // degrees, measured clockwise from +x (SVG coordinates)
-const ARC_SWEEP = 270;
-const DIAL = { cx: 100, cy: 100, r: 80 };
-
 const pct = (raw) => Math.round((raw * 100) / 255);
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-
-function polar(angleDeg, r = DIAL.r) {
-  const a = (angleDeg * Math.PI) / 180;
-  return [DIAL.cx + r * Math.cos(a), DIAL.cy + r * Math.sin(a)];
-}
-
-function arcPath(fraction) {
-  const f = clamp(fraction, 0, 1);
-  const [x0, y0] = polar(ARC_START);
-  if (f <= 0.0005) return `M ${x0} ${y0}`;
-  const end = ARC_START + ARC_SWEEP * f;
-  const [x1, y1] = polar(end);
-  const large = ARC_SWEEP * f > 180 ? 1 : 0;
-  return `M ${x0} ${y0} A ${DIAL.r} ${DIAL.r} 0 ${large} 1 ${x1} ${y1}`;
-}
 
 /** Linear interpolation over a 24 h circular schedule. points: [[min, ...ui]] */
 function valueAt(points, minute, idx) {
@@ -126,18 +107,6 @@ class KessilCard extends HTMLElement {
 
   // ---- service calls -------------------------------------------------------
 
-  _setBrightness(raw) {
-    if (raw <= 0) {
-      this._hass.callService("light", "turn_off", { entity_id: this._config.entity });
-    } else {
-      this._hass.callService("light", "turn_on", { entity_id: this._config.entity, brightness: raw });
-    }
-  }
-
-  _toggle() {
-    this._hass.callService("light", "toggle", { entity_id: this._config.entity });
-  }
-
   _setNumber(entityId, value) {
     this._hass.callService("number", "set_value", { entity_id: entityId, value });
   }
@@ -162,26 +131,41 @@ class KessilCard extends HTMLElement {
 
     const related = this._related();
     const modeState = related.mode ? hass.states[related.mode] : null;
-    const brightness = light.state === "on" ? light.attributes.brightness || 0 : 0;
     const name = this._config.name || light.attributes.friendly_name || "Kessil";
     const isManual = modeState ? modeState.state === "manual" : !!light.attributes.manual;
     const programs = modeState?.attributes.programs || {};
-    const programNames = Object.keys(programs);
-    const curveName = !isManual && programs[modeState?.state] ? modeState.state : programNames[0];
-    const curve = curveName ? programs[curveName] : null;
-
     const modeLabel = (opt) => (opt === "manual" ? t("Manuell", "Manual") : opt);
 
-    const sliders = CHANNELS.filter((c) => related[c.key] && hass.states[related[c.key]])
+    // percent value of a channel; intensity falls back to the light's brightness
+    const percentOf = (key) => {
+      const st = related[key] ? hass.states[related[key]] : null;
+      const v = st ? Number(st.state) : NaN;
+      if (Number.isFinite(v)) return v;
+      if (key === "intensity") return pct(light.state === "on" ? light.attributes.brightness || 0 : 0);
+      return 0;
+    };
+
+    // Curve: the running program, or in manual mode a constant line at the current values.
+    let curve = null;
+    let curveName = null;
+    if (isManual) {
+      const raw = (key) => Math.round((percentOf(key) * 255) / 100);
+      curve = [[0, raw("intensity"), raw("color"), 0, 0, 0]];
+      curveName = t("Manuell (konstant)", "Manual (constant)");
+    } else if (modeState && programs[modeState.state]) {
+      curve = programs[modeState.state];
+      curveName = modeState.state;
+    }
+
+    const sliders = CHANNELS.filter((c) => (related[c.key] && hass.states[related[c.key]]) || c.key === "intensity")
       .map((c) => {
-        const st = hass.states[related[c.key]];
-        const val = Number(st.state);
-        const v = Number.isFinite(val) ? val : 0;
+        const st = related[c.key] ? hass.states[related[c.key]] : null;
+        const v = percentOf(c.key);
         return `
           <div class="slider">
             <div class="slider-head"><span>${c.label[lang]}</span><span class="val" data-val="${c.key}">${v} %</span></div>
             <input type="range" min="0" max="100" step="1" value="${v}" data-key="${c.key}"
-                   style="--track:${c.track}" ${st.state === "unavailable" ? "disabled" : ""}>
+                   style="--track:${c.track}" ${st && st.state === "unavailable" ? "disabled" : ""}>
           </div>`;
       })
       .join("");
@@ -205,28 +189,13 @@ class KessilCard extends HTMLElement {
           }</div>
         </div>
 
-        <div class="dial-wrap">
-          <svg class="dial" viewBox="0 0 200 200">
-            <path class="track" d="${arcPath(1)}"></path>
-            <path class="value" d="${arcPath(brightness / 255)}"></path>
-            <circle class="knob" r="9" cx="${polar(ARC_START + ARC_SWEEP * (brightness / 255))[0]}"
-                    cy="${polar(ARC_START + ARC_SWEEP * (brightness / 255))[1]}"></circle>
-          </svg>
-          <button class="center" title="${t("Ein/Aus", "On/Off")}">
-            <span class="pct">${pct(brightness)}<small>%</small></span>
-            <span class="lbl">${t("Intensität", "Intensity")}</span>
-          </button>
-        </div>
-
-        <div class="sliders">${sliders}</div>
-
         ${modes ? `<div class="modes">${modes}</div>` : ""}
 
         ${curve ? this._curveSvg(curve, curveName, t) : ""}
+
+        <div class="sliders">${sliders}</div>
       </ha-card>`;
 
-    this._wireDial(brightness);
-    this.shadowRoot.querySelector(".center").addEventListener("click", () => this._toggle());
     this.shadowRoot.querySelectorAll("input[type=range]").forEach((input) => {
       const key = input.dataset.key;
       const label = this.shadowRoot.querySelector(`[data-val="${key}"]`);
@@ -235,7 +204,16 @@ class KessilCard extends HTMLElement {
       input.addEventListener("input", () => (label.textContent = `${input.value} %`));
       input.addEventListener("change", () => {
         this._dragging = false;
-        this._setNumber(related[key], Number(input.value));
+        const value = Number(input.value);
+        if (related[key]) {
+          this._setNumber(related[key], value);
+        } else if (key === "intensity") {
+          // older setups without the intensity number entity
+          this._hass.callService("light", "turn_on", {
+            entity_id: this._config.entity,
+            brightness: Math.max(1, Math.round((value * 255) / 100)),
+          });
+        }
       });
     });
     this.shadowRoot.querySelectorAll(".chip").forEach((btn) =>
@@ -244,49 +222,6 @@ class KessilCard extends HTMLElement {
         if (opt !== modeState.state) this._selectMode(related.mode, opt);
       })
     );
-  }
-
-  _wireDial(initial) {
-    const svg = this.shadowRoot.querySelector(".dial");
-    const valuePath = svg.querySelector(".value");
-    const knob = svg.querySelector(".knob");
-    const pctEl = this.shadowRoot.querySelector(".pct");
-    let current = initial;
-
-    const fromEvent = (ev) => {
-      const rect = svg.getBoundingClientRect();
-      const x = ((ev.clientX - rect.left) / rect.width) * 200 - DIAL.cx;
-      const y = ((ev.clientY - rect.top) / rect.height) * 200 - DIAL.cy;
-      let deg = (Math.atan2(y, x) * 180) / Math.PI;
-      let rel = (deg - ARC_START + 720) % 360;
-      if (rel > ARC_SWEEP) rel = rel > ARC_SWEEP + (360 - ARC_SWEEP) / 2 ? 0 : ARC_SWEEP;
-      return Math.round((rel / ARC_SWEEP) * 255);
-    };
-    const show = (raw) => {
-      current = raw;
-      valuePath.setAttribute("d", arcPath(raw / 255));
-      const [kx, ky] = polar(ARC_START + ARC_SWEEP * (raw / 255));
-      knob.setAttribute("cx", kx);
-      knob.setAttribute("cy", ky);
-      pctEl.innerHTML = `${pct(raw)}<small>%</small>`;
-    };
-
-    svg.addEventListener("pointerdown", (ev) => {
-      this._dragging = true;
-      svg.setPointerCapture(ev.pointerId);
-      show(fromEvent(ev));
-    });
-    svg.addEventListener("pointermove", (ev) => {
-      if (this._dragging && svg.hasPointerCapture(ev.pointerId)) show(fromEvent(ev));
-    });
-    const finish = (ev) => {
-      if (!svg.hasPointerCapture(ev.pointerId)) return;
-      svg.releasePointerCapture(ev.pointerId);
-      this._dragging = false;
-      this._setBrightness(current);
-    };
-    svg.addEventListener("pointerup", finish);
-    svg.addEventListener("pointercancel", finish);
   }
 
   _curveSvg(points, name, t) {
@@ -341,21 +276,7 @@ const STYLE = `
   .badge.manual { background: rgba(245,118,26,0.15); color: #f5761a; }
   .badge.program { background: rgba(var(--rgb-primary-color, 3,169,244),0.15); color: var(--primary-color); }
 
-  .dial-wrap { position: relative; width: 220px; max-width: 100%; margin: 8px auto 0; aspect-ratio: 1; }
-  .dial { width: 100%; height: 100%; touch-action: none; cursor: pointer; }
-  .dial path { fill: none; stroke-linecap: round; stroke-width: 14; }
-  .dial .track { stroke: var(--divider-color, rgba(127,127,127,0.25)); }
-  .dial .value { stroke: var(--kessil-dial-color, #4fc3f7); }
-  .dial .knob { fill: var(--card-background-color, #fff); stroke: var(--kessil-dial-color, #4fc3f7); stroke-width: 4; }
-  .center { position: absolute; inset: 28%; border: none; background: none; border-radius: 50%; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--primary-text-color); font: inherit; }
-  .center:focus-visible { outline: 2px solid var(--primary-color); }
-  .pct { font-size: 2.6em; font-weight: 400; line-height: 1; }
-  .pct small { font-size: 0.45em; margin-left: 2px; color: var(--secondary-text-color); }
-  .lbl { font-size: 0.85em; color: var(--secondary-text-color); margin-top: 4px; }
-
-  .sliders { display: grid; gap: 10px; margin-top: 4px; }
+  .sliders { display: grid; gap: 10px; margin-top: 16px; }
   .slider-head { display: flex; justify-content: space-between; font-size: 0.9em; color: var(--secondary-text-color); }
   .slider-head .val { color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 5px;
@@ -366,7 +287,7 @@ const STYLE = `
                       background: var(--card-background-color, #fff); border: 2px solid var(--primary-text-color); cursor: pointer; }
   input[type=range]:disabled { opacity: 0.4; }
 
-  .modes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+  .modes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
   .chip { border: 1px solid var(--divider-color); background: none; color: var(--primary-text-color);
           border-radius: 16px; padding: 4px 12px; font: inherit; font-size: 0.9em; cursor: pointer; }
   .chip.active { background: var(--primary-color); border-color: var(--primary-color); color: var(--text-primary-color, #fff); }
@@ -393,7 +314,7 @@ if (!customElements.get("kessil-card")) {
   window.customCards.push({
     type: "kessil-card",
     name: "Kessil",
-    description: "Intensity dial, spectrum sliders, mode and daily curve for a Kessil group",
+    description: "Mode, daily curve and channel sliders for a Kessil group",
     preview: false,
   });
   console.info(`%c KESSIL-CARD %c ${CARD_VERSION} `, "background:#f5761a;color:#fff", "background:#333;color:#fff");

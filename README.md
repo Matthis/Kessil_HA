@@ -3,8 +3,8 @@
 # Home Assistant (HA) Integration for Kessil Wifi Dongle
 
 Unofficial, local-only Home Assistant integration for the **Kessil WiFi dongle**
-(KSAWD01), developed with **A360X Tuna Sun** lamps. Includes a Lovelace card with an
-intensity dial, spectrum sliders, mode buttons and the daily curve.
+(KSAWD01), developed with **A360X Tuna Sun** lamps. Includes a Lovelace card with mode
+buttons, the daily curve and channel sliders.
 
 > Not affiliated with or endorsed by Kessil. "Kessil" is used only to describe
 > which device this works with.
@@ -72,14 +72,14 @@ entity: light.kessil_group_tuna_sun
 name: Aquarium   # optional
 ```
 
-The other entities (light color, red, amber, mode) are found automatically through the
-light's device.
+The other entities (intensity, light color, red, amber, mode) are found
+automatically through the light's device.
 
-- Drag the ring to set the intensity, tap the centre to toggle on/off.
-- Changing intensity or a slider switches to manual mode, starting from the manual
-  values stored in the dongle; tap a program to return.
-- The daily curve shows intensity (solid) and light color (dashed) of the running
-  program – or of the first program while in manual mode – with a marker for now.
+- Top: mode buttons (manual or one of the dongle's programs) and the daily curve
+  with intensity (solid), light color (dashed) and a marker for now. In manual
+  mode the curve is a constant line at the current values.
+- Below: sliders for intensity, light color, red and amber. Moving one switches
+  to manual mode, starting from the manual values stored in the dongle.
 
 ## Notes
 
