@@ -22,7 +22,7 @@ from .api import (
     Program,
     SystemInfo,
 )
-from .const import DOMAIN, SCAN_INTERVAL, SLOW_REFRESH_EVERY, light_channels
+from .const import DOMAIN, SCAN_INTERVAL, SLOW_REFRESH_EVERY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,27 +109,17 @@ class KessilCoordinator(DataUpdateCoordinator[KessilData]):
     def current_ui(self, gid: int) -> tuple[int, ...]:
         return self.data.current_ui(self.data.groups[gid], dt_util.now())
 
-    def is_dark(self, gid: int) -> bool:
-        ui = self.current_ui(gid)
-        return all(ui[idx] == 0 for idx in light_channels(self.data.groups[gid].type))
-
     # --- write helpers used by the entities ---------------------------------
 
     async def async_set_channels(self, gid: int, changes: dict[int, int]) -> None:
         """Switch the group to manual (if needed) and set channel values.
 
-        Channels not in `changes` keep their current value, so switching from
-        a running program keeps the program's current look. If the lamps are
-        dark (e.g. night in the program), the non-emitting channels (light
-        color) come from the stored manual values instead of the program's
-        zeros, and the emitting ones stay 0 unless changed.
+        Channels not in `changes` keep the manual values stored in the dongle
+        (which is also what the dongle itself switches to in manual mode).
+        Nothing is remembered in Home Assistant.
         """
         group = self.data.groups[gid]
-        ui = list(self.current_ui(gid))
-        if self.is_dark(gid):
-            ui = list(group.ui)
-            for idx in light_channels(group.type):
-                ui[idx] = 0
+        ui = list(group.ui)
         for idx, value in changes.items():
             ui[idx] = max(0, min(255, int(value)))
         try:

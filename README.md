@@ -13,12 +13,26 @@ Per lamp group on the dongle:
 
 | Entity | What it does |
 |---|---|
-| `light` | On/off and intensity. Off sets intensity, red and amber to 0 (red and amber are separate LEDs); on restores the values from before. Any change switches the group to manual mode. |
+| `light` | Operating state and intensity (see below). |
 | `number` Intensity / Light color / Red / Amber | Channels in % (Tuna Sun) |
 | `select` Mode | `Manual` or one of the programs stored on the dongle |
 | `sensor` Lamps | Number of lamps in the group (diagnostic) |
 
 Plus one overheat status sensor per lamp (diagnostic).
+
+**On/off** shows the operating state rather than a power switch:
+
+| State | Light |
+|---|---|
+| A program runs (even while its values are 0, e.g. at night) | on |
+| Manual, intensity, red and amber all 0 | off |
+| Manual, at least one of them above 0 | on |
+
+Red and amber are separate LEDs, so they count on their own. Turning *off*
+switches to manual with these channels at 0. Turning *on* switches to manual with
+the intensity stored in the dongle (about 50 % if that is 0). Any slider change
+also switches to manual, starting from the manual values stored in the dongle.
+Home Assistant does not remember any values itself.
 
 Each lamp group becomes one device, named after the lamp type as in the Kessil app
 (e.g. *Kessil Group - Tuna Sun*). The dongle itself and single lamps are not separate devices.
@@ -60,7 +74,8 @@ The other entities (light color, red, amber, mode) are found automatically throu
 light's device.
 
 - Drag the ring to set the intensity, tap the centre to toggle on/off.
-- Changing intensity or a slider switches to manual mode; tap a program to return.
+- Changing intensity or a slider switches to manual mode, starting from the manual
+  values stored in the dongle; tap a program to return.
 - The daily curve shows intensity (solid) and light color (dashed) of the running
   program – or of the first program while in manual mode – with a marker for now.
 

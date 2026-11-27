@@ -42,7 +42,7 @@ printf '{"dtype":117,"data":{}}' | nc -w 3 <dongle-ip> 8888
 | 102 | Group state | `GID` | ✅ |
 | 105 | Program IDs per lamp type | `{}` | ✅ |
 | 106 | Program details (curve points) | `PID`, `type` | ✅ |
-| 113 | Pause group ⚠️ | `GID`, `pause` | not tested |
+| 113 | Pause group ⚠️ | `GID`, `pause` (`1`/`0`) | ✅ accepted |
 | 114 | System info | `{}` | ✅ |
 | 117 | Dongle serial / siblings | `{}` | ✅ |
 
@@ -152,6 +152,11 @@ Request `{"dtype":106,"data":{"PID":1,"type":2}}`:
 
 **Back to a program**: `{"dtype":100,"data":{"GID":2,"PID":3}}` – `UI` keeps the
 manual values from step 2 although the lamps follow the program again.
+
+**Pause / resume**: `{"dtype":113,"data":{"GID":2,"pause":1}}`, then `"pause":0`.
+The response contains the full group object (as in 102) with `pause` set; `pid`
+and the stored manual `UI` are not changed. (Visible effect on the lamps not yet
+confirmed.)
 
 **Preview without switching**: `dtype 3` with `"save":0` shows the values for about
 one second, then the running program takes over again.

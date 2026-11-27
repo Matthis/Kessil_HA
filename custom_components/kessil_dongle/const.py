@@ -44,6 +44,7 @@ def light_channels(group_type: int) -> tuple[int, ...]:
     return LIGHT_CHANNELS.get(group_type, DEFAULT_LIGHT_CHANNELS)
 
 
+# Intensity used when turning on a manual group whose stored intensity is 0 (~50 %).
 DEFAULT_BRIGHTNESS: Final = 128
 
 CARD_URL: Final = "/kessil_dongle/kessil-card.js"
