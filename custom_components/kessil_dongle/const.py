@@ -34,6 +34,16 @@ DEFAULT_EXTRA_CHANNELS: Final[dict[str, tuple[int, int]]] = {
     "color": (CH_COLOR, 255),
 }
 
+# Channels that emit light on their own. On Tuna Sun, red and amber are separate
+# LEDs that stay lit at intensity 0, so "off" must zero all of them.
+LIGHT_CHANNELS: Final[dict[int, tuple[int, ...]]] = {2: (CH_INTENSITY, CH_RED, CH_AMBER)}
+DEFAULT_LIGHT_CHANNELS: Final[tuple[int, ...]] = (CH_INTENSITY,)
+
+
+def light_channels(group_type: int) -> tuple[int, ...]:
+    return LIGHT_CHANNELS.get(group_type, DEFAULT_LIGHT_CHANNELS)
+
+
 DEFAULT_BRIGHTNESS: Final = 128
 
 CARD_URL: Final = "/kessil_dongle/kessil-card.js"

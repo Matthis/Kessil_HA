@@ -10,10 +10,13 @@ pytest.importorskip("pytest_homeassistant_custom_component")
 
 from homeassistant import config_entries, loader
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+)
 
 from custom_components.kessil_dongle.const import DOMAIN
 
@@ -131,7 +134,7 @@ async def test_turn_off_switches_to_manual(hass: HomeAssistant, fake) -> None:
                     "UI1": 0,
                     "UI2": 255,
                     "UI3": 0,
-                    "UI4": 30,
+                    "UI4": 0,  # red/amber are separate LEDs: off zeroes them too
                     "UI5": 0,
                     "save": 1,
                     "enabled": 1,
@@ -145,7 +148,8 @@ async def test_turn_off_switches_to_manual(hass: HomeAssistant, fake) -> None:
         fake.requests.clear()
         await hass.services.async_call("light", "turn_on", {"entity_id": LIGHT}, blocking=True)
         assert [r["dtype"] for r in fake.requests] == [3]
-        assert fake.requests[0]["data"]["UI1"] == 204
+        data = fake.requests[0]["data"]
+        assert [data[f"UI{i}"] for i in range(1, 6)] == [204, 255, 0, 30, 0]
 
 
 async def test_set_number(hass: HomeAssistant, fake) -> None:
@@ -228,7 +232,7 @@ async def test_turn_on_at_night_uses_stored_spectrum(hass: HomeAssistant, fake, 
         assert hass.states.get(f"number.{PREFIX}_light_color").state == "46"
 
 
-async def test_spectrum_change_at_night_stays_dark(hass: HomeAssistant, fake, freezer) -> None:
+async def test_red_at_night_keeps_intensity_off(hass: HomeAssistant, fake, freezer) -> None:
     freezer.move_to("2026-11-27 19:00:00+00:00")
     async with fake:
         await setup(hass, fake)
@@ -239,3 +243,32 @@ async def test_spectrum_change_at_night_stays_dark(hass: HomeAssistant, fake, fr
         data = fake.requests[-1]["data"]
         assert data["UI1"] == 0
         assert data["UI4"] == 40
+
+
+async def test_red_only_counts_as_on(hass: HomeAssistant, fake) -> None:
+    fake.responses[(102, 2)] = (
+        fake.responses[(102, 2)]
+        .replace('"pid":3', '"pid":-1')
+        .replace('"UI":[128,117,0,78,56]', '"UI":[0,117,0,40,0]')
+    )
+    async with fake:
+        await setup(hass, fake)
+        assert hass.states.get(LIGHT).state == "on"
+        fake.requests.clear()
+        await hass.services.async_call("light", "turn_off", {"entity_id": LIGHT}, blocking=True)
+        data = fake.requests[-1]["data"]
+        assert [data[f"UI{i}"] for i in range(1, 6)] == [0, 117, 0, 0, 0]
+        assert hass.states.get(LIGHT).state == "off"
+
+
+async def test_last_on_state_restored_after_restart(hass: HomeAssistant, fake, freezer) -> None:
+    freezer.move_to("2026-11-27 19:00:00+00:00")  # program dark
+    mock_restore_cache_with_extra_data(
+        hass, [(State(LIGHT, "off"), {"last_on_ui": [90, 200, 0, 25, 70]})]
+    )
+    async with fake:
+        await setup(hass, fake)
+        fake.requests.clear()
+        await hass.services.async_call("light", "turn_on", {"entity_id": LIGHT}, blocking=True)
+        data = fake.requests[-1]["data"]
+        assert [data[f"UI{i}"] for i in range(1, 6)] == [90, 117, 0, 25, 70]

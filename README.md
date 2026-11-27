@@ -13,7 +13,7 @@ Per lamp group on the dongle:
 
 | Entity | What it does |
 |---|---|
-| `light` | On/off and intensity. Any change switches the group to manual mode. |
+| `light` | On/off and intensity. Off sets intensity, red and amber to 0 (red and amber are separate LEDs); on restores the values from before. Any change switches the group to manual mode. |
 | `number` Intensity / Light color / Red / Amber | Channels in % (Tuna Sun) |
 | `select` Mode | `Manual` or one of the programs stored on the dongle |
 | `sensor` Lamps | Number of lamps in the group (diagnostic) |
