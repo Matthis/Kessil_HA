@@ -139,6 +139,8 @@ Request `{"dtype":106,"data":{"PID":1,"type":2}}`:
 - `minutes`: minutes after midnight (dongle clock, see `timezone` in 114).
 - `UI`: channel values at that point; the dongle fades between points.
 - `eid` ≥ 0 marks an effect at that point (`duration` in seconds, `freq`).
+  `eid 0` is the thunderstorm effect (observed as a short dip in intensity and
+  light color in the curve).
 
 ## Control sequences
 
