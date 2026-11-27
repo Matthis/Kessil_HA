@@ -1,1 +1,1 @@
-# HA_Integration_Kessil_Wifi_Dongle
+# Home Assistant (HA) Integration for Kessil Wifi Dongle 
