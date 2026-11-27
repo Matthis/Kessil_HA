@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Home Assistant dev config
+config/
+
+# Node (Lovelace card)
+node_modules/
+
+# Editors
+.idea/
+.vscode/
