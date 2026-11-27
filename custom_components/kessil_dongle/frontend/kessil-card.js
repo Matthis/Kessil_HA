@@ -10,7 +10,7 @@
  */
 
 const DOMAIN = "kessil_dongle";
-const CARD_VERSION = "0.1.8";
+const CARD_VERSION = "0.1.9";
 
 const CHANNELS = [
   { key: "intensity", label: { de: "Intensität", en: "Intensity" }, track: "linear-gradient(90deg,#16202c,#4fc3f7)", index: 0 },
@@ -238,6 +238,20 @@ class KessilCard extends HTMLElement {
     const now = new Date();
     const minute = now.getHours() * 60 + now.getMinutes();
     const nowVal = valueAt(points, minute, 1);
+    const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+    const effectPoints = points.filter((p) => p.length > 6 && p[6] >= 0);
+    const effectLabel = (p) =>
+      `${p[6] === 0 ? t("Gewitter", "Thunderstorm") : `${t("Effekt", "Effect")} ${p[6]}`} ${fmt(p[0])}`;
+    // dashed marker lines inside the (non-uniformly scaled) chart ...
+    const effectLines = effectPoints
+      .map((p) => `<line class="effect" x1="${x(p[0])}" x2="${x(p[0])}" y1="${PAD}" y2="${y(0)}"></line>`)
+      .join("");
+    // ... and undistorted cloud-with-lightning icons positioned on top in HTML
+    const effectIcons = effectPoints
+      .map(
+        (p) => `<div class="effect-icon" style="left:${((x(p[0]) / W) * 100).toFixed(2)}%" title="${escapeHtml(effectLabel(p))}">${STORM_ICON}</div>`
+      )
+      .join("");
     const ticks = [0, 6, 12, 18, 24]
       .map((h) => `<text x="${x(h * 60)}" y="${H + 12}" text-anchor="middle">${h}</text>`)
       .join("");
@@ -248,19 +262,31 @@ class KessilCard extends HTMLElement {
           <span>${t("Tageskurve", "Daily curve")}: ${escapeHtml(name)}</span>
           <span class="legend"><i class="l-int"></i>${t("Intensität", "Intensity")} <i class="l-col"></i>${t("Lichtfarbe", "Light color")}</span>
         </div>
+        <div class="chart">
+        ${effectIcons}
         <svg viewBox="0 0 ${W} ${H + 16}" preserveAspectRatio="none">
           <line class="grid" x1="${PAD}" x2="${W - PAD}" y1="${y(0)}" y2="${y(0)}"></line>
           <line class="grid" x1="${PAD}" x2="${W - PAD}" y1="${y(255)}" y2="${y(255)}"></line>
           <polyline class="s-col" points="${series(2)}"></polyline>
           <polygon class="s-int-fill" points="${x(0)},${y(0)} ${series(1)} ${x(1440)},${y(0)}"></polygon>
           <polyline class="s-int" points="${series(1)}"></polyline>
+          ${effectLines}
           <line class="now" x1="${x(minute)}" x2="${x(minute)}" y1="${PAD}" y2="${y(0)}"></line>
           <circle class="now-dot" cx="${x(minute)}" cy="${y(nowVal)}" r="3"></circle>
           ${ticks}
         </svg>
+        </div>
       </div>`;
   }
 }
+
+// Cloud with lightning bolt (original drawing), used to mark the thunderstorm effect.
+const STORM_ICON = `<svg viewBox="0 0 24 22" aria-hidden="true">
+  <path d="M6.5 13.5a4.2 4.2 0 0 1-.4-8.38A5.6 5.6 0 0 1 16.9 4.3a4 4 0 0 1 .9 7.9 3 3 0 0 1-.8 1.3z"
+        fill="var(--secondary-text-color, #8a8a8a)" opacity="0.9"/>
+  <path d="M12.2 10.5 8.8 16.2h2.7l-1.3 5.3 4.9-7h-2.8l1.6-4z" fill="#f5b301"
+        stroke="var(--card-background-color, #fff)" stroke-width="0.8" stroke-linejoin="round"/>
+</svg>`;
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -306,6 +332,10 @@ const STYLE = `
   .curve .s-col { fill: none; stroke: #c9b98a; stroke-width: 1.2; stroke-dasharray: 3 2; vector-effect: non-scaling-stroke; }
   .curve .now { stroke: var(--primary-text-color); stroke-width: 1; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
   .curve .now-dot { fill: var(--primary-text-color); }
+  .curve .chart { position: relative; padding-top: 22px; }
+  .curve .effect { stroke: #f5b301; stroke-width: 1; stroke-dasharray: 1 2; vector-effect: non-scaling-stroke; opacity: 0.7; }
+  .curve .effect-icon { position: absolute; top: 0; width: 24px; height: 22px; transform: translateX(-50%); }
+  .curve .effect-icon svg { width: 100%; height: 100%; display: block; }
 `;
 
 if (!customElements.get("kessil-card")) {

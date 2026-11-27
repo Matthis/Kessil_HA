@@ -39,8 +39,8 @@ def program_options(programs: list[Program]) -> dict[str, Program]:
 
 
 def points_as_lists(program: Program) -> list[list[int]]:
-    """Compact form for the card: [minutes, ch1, ch2, ch3, ch4, ch5]."""
-    return [[p.minutes, *p.ui] for p in program.points]
+    """Compact form for the card: [minutes, ch1, ch2, ch3, ch4, ch5, effect]."""
+    return [[p.minutes, *p.ui, p.effect] for p in program.points]
 
 
 class KessilModeSelect(KessilGroupEntity, SelectEntity):

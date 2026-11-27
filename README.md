@@ -76,7 +76,8 @@ The other entities (intensity, light color, red, amber, mode) are found
 automatically through the light's device.
 
 - Top: mode buttons (manual or one of the dongle's programs) and the daily curve
-  with intensity (solid), light color (dashed) and a marker for now. In manual
+  with intensity (solid), light color (dashed), a marker for now and a
+  cloud-with-lightning symbol where the program has a thunderstorm effect. In manual
   mode the curve is a constant line at the current values.
 - Below: sliders for intensity, light color, red and amber. Moving one switches
   to manual mode, starting from the manual values stored in the dongle.

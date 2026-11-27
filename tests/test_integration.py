@@ -80,7 +80,9 @@ async def test_entities_created(hass: HomeAssistant, fake) -> None:
         mode = hass.states.get(MODE)
         assert mode.state == "Default"
         assert mode.attributes["options"] == ["manual", "Preset Tuna Sun", "Default"]
-        assert len(mode.attributes["programs"]["Default"]) == 12
+        points = mode.attributes["programs"]["Default"]
+        assert len(points) == 12
+        assert [p[0] for p in points if p[6] >= 0] == [720]  # thunderstorm at 12:00
 
         assert hass.states.get(f"sensor.{PREFIX}_lamps").state == "2"
 

@@ -67,6 +67,8 @@ async def test_program(fake):
     minutes = [p.minutes for p in program.points]
     assert minutes == sorted(minutes)
     assert all(len(p.ui) == 5 for p in program.points)
+    storms = [p for p in program.points if p.effect == 0]
+    assert [(p.minutes, p.duration) for p in storms] == [(720, 300)]
 
 
 async def test_program_pid0_is_error(fake):

@@ -109,6 +109,8 @@ class Group:
 class ProgramPoint:
     minutes: int
     ui: tuple[int, ...]
+    effect: int = -1  # eid; -1 = none, 0 = thunderstorm
+    duration: int = 0  # effect duration in seconds
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,7 +126,14 @@ class Program:
         for p in raw.get("points", []):
             ui = [int(v) for v in p.get("UI", [])][:UI_CHANNELS]
             ui += [0] * (UI_CHANNELS - len(ui))
-            points.append(ProgramPoint(minutes=int(p["minutes"]), ui=tuple(ui)))
+            points.append(
+                ProgramPoint(
+                    minutes=int(p["minutes"]),
+                    ui=tuple(ui),
+                    effect=int(p.get("eid", -1)),
+                    duration=int(p.get("duration", 0)),
+                )
+            )
         points.sort(key=lambda p: p.minutes)
         return cls(
             pid=int(raw["PID"]),
