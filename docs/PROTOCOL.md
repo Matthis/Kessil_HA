@@ -155,8 +155,9 @@ manual values from step 2 although the lamps follow the program again.
 
 **Pause / resume**: `{"dtype":113,"data":{"GID":2,"pause":1}}`, then `"pause":0`.
 The response contains the full group object (as in 102) with `pause` set; `pid`
-and the stored manual `UI` are not changed. (Visible effect on the lamps not yet
-confirmed.)
+and the stored manual `UI` are not changed. Tested in manual mode with only red at
+100: the red LEDs stayed lit while paused, so pause does **not** turn the lamps
+off. It presumably freezes a running program (effect on intensity not verified).
 
 **Preview without switching**: `dtype 3` with `"save":0` shows the values for about
 one second, then the running program takes over again.
