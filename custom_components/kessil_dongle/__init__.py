@@ -82,10 +82,12 @@ def _register_devices(
 
 
 def group_device_names(coordinator: KessilCoordinator) -> dict[int, str]:
-    """ "Kessil <type> Group", plus the dongle's group name if that is ambiguous."""
+    """ "Kessil Group - <type>" as in the Kessil app, plus the dongle's group name
+    if that is ambiguous."""
     groups = coordinator.data.groups
     base = {
-        gid: f"Kessil {TYPE_NAMES.get(group.type, 'Lamp')} Group" for gid, group in groups.items()
+        gid: f"Kessil Group - {TYPE_NAMES.get(group.type, group.type)}"
+        for gid, group in groups.items()
     }
     counts = {name: list(base.values()).count(name) for name in base.values()}
     return {

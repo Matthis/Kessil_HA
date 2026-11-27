@@ -17,9 +17,9 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.kessil_dongle.const import DOMAIN
 
-LIGHT = "light.kessil_tuna_sun_group"
-MODE = "select.kessil_tuna_sun_group_mode"
-PREFIX = "kessil_tuna_sun_group"
+LIGHT = "light.kessil_group_tuna_sun"
+MODE = "select.kessil_group_tuna_sun_mode"
+PREFIX = "kessil_group_tuna_sun"
 
 
 @pytest.fixture(autouse=True)
@@ -92,7 +92,7 @@ async def test_entities_created(hass: HomeAssistant, fake) -> None:
 
         devices = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
         assert len(devices) == 1
-        assert devices[0].name == "Kessil Tuna Sun Group"
+        assert devices[0].name == "Kessil Group - Tuna Sun"
         assert devices[0].model == "A360X Tuna Sun"
 
 
@@ -112,7 +112,7 @@ async def test_old_devices_removed(hass: HomeAssistant, fake) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         devices = dr.async_entries_for_config_entry(registry, entry.entry_id)
-        assert [d.name for d in devices] == ["Kessil Tuna Sun Group"]
+        assert [d.name for d in devices] == ["Kessil Group - Tuna Sun"]
 
 
 async def test_turn_off_switches_to_manual(hass: HomeAssistant, fake) -> None:

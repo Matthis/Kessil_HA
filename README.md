@@ -20,8 +20,8 @@ Per lamp group on the dongle:
 
 Plus one overheat status sensor per lamp (diagnostic).
 
-Each lamp group becomes one device, named after the lamp type
-(e.g. *Kessil Tuna Sun Group*). The dongle itself and single lamps are not separate devices.
+Each lamp group becomes one device, named after the lamp type as in the Kessil app
+(e.g. *Kessil Group - Tuna Sun*). The dongle itself and single lamps are not separate devices.
 
 Communication is local TCP (port 8888), polled every 60 seconds. No cloud, no app
 needed after the dongle has been set up once.
@@ -52,7 +52,7 @@ resource needed.
 
 ```yaml
 type: custom:kessil-card
-entity: light.kessil_tuna_sun_group
+entity: light.kessil_group_tuna_sun
 name: Aquarium   # optional
 ```
 
