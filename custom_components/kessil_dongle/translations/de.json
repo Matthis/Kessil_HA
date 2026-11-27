@@ -19,6 +19,9 @@
   },
   "entity": {
     "number": {
+      "intensity": {
+        "name": "Intensität"
+      },
       "color": {
         "name": "Farbe"
       },

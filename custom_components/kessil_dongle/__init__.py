@@ -82,15 +82,14 @@ def _register_devices(
 
 
 def group_device_names(coordinator: KessilCoordinator) -> dict[int, str]:
-    """ "Kessil <lamp model>", plus the dongle's group name if that is ambiguous."""
-    system = coordinator.data.system
-    base: dict[int, str] = {}
-    for gid, group in coordinator.data.groups.items():
-        models = sorted({lamp.model for lamp in system.lamps if lamp.gid == gid})
-        base[gid] = f"Kessil {models[0]}" if len(models) == 1 else f"Kessil {group.name}"
+    """ "Kessil <type> Group", plus the dongle's group name if that is ambiguous."""
+    groups = coordinator.data.groups
+    base = {
+        gid: f"Kessil {TYPE_NAMES.get(group.type, 'Lamp')} Group" for gid, group in groups.items()
+    }
     counts = {name: list(base.values()).count(name) for name in base.values()}
     return {
-        gid: f"{name} ({coordinator.data.groups[gid].name})" if counts[name] > 1 else name
+        gid: f"{name} ({groups[gid].name})" if counts[name] > 1 else name
         for gid, name in base.items()
     }
 

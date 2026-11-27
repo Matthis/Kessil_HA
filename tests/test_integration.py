@@ -17,9 +17,9 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.kessil_dongle.const import DOMAIN
 
-LIGHT = "light.kessil_a360x_tuna_sun"
-MODE = "select.kessil_a360x_tuna_sun_mode"
-PREFIX = "kessil_a360x_tuna_sun"
+LIGHT = "light.kessil_tuna_sun_group"
+MODE = "select.kessil_tuna_sun_group_mode"
+PREFIX = "kessil_tuna_sun_group"
 
 
 @pytest.fixture(autouse=True)
@@ -72,6 +72,7 @@ async def test_entities_created(hass: HomeAssistant, fake) -> None:
         assert light.attributes["brightness"] == 204  # from the curve, not the stored UI
         assert light.attributes["manual"] is False
 
+        assert hass.states.get(f"number.{PREFIX}_intensity").state == "80"
         assert hass.states.get(f"number.{PREFIX}_color").state == "100"
         assert hass.states.get(f"number.{PREFIX}_red").state == "30"
         assert hass.states.get(f"number.{PREFIX}_amber").state == "0"
@@ -91,7 +92,7 @@ async def test_entities_created(hass: HomeAssistant, fake) -> None:
 
         devices = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
         assert len(devices) == 1
-        assert devices[0].name == "Kessil A360X Tuna Sun"
+        assert devices[0].name == "Kessil Tuna Sun Group"
         assert devices[0].model == "A360X Tuna Sun"
 
 
@@ -111,7 +112,7 @@ async def test_old_devices_removed(hass: HomeAssistant, fake) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         devices = dr.async_entries_for_config_entry(registry, entry.entry_id)
-        assert [d.name for d in devices] == ["Kessil A360X Tuna Sun"]
+        assert [d.name for d in devices] == ["Kessil Tuna Sun Group"]
 
 
 async def test_turn_off_switches_to_manual(hass: HomeAssistant, fake) -> None:
@@ -210,3 +211,31 @@ async def test_program_night_shows_off(hass: HomeAssistant, fake, freezer) -> No
         await setup(hass, fake)
         assert hass.states.get(LIGHT).state == "off"
         assert hass.states.get(MODE).state == "Default"
+
+
+async def test_turn_on_at_night_uses_stored_spectrum(hass: HomeAssistant, fake, freezer) -> None:
+    """Program is dark: spectrum comes from the stored manual UI, not zeros."""
+    freezer.move_to("2026-11-27 19:00:00+00:00")
+    async with fake:
+        await setup(hass, fake)
+        fake.requests.clear()
+        await hass.services.async_call(
+            "light", "turn_on", {"entity_id": LIGHT, "brightness": 100}, blocking=True
+        )
+        assert fake.requests[0] == {"dtype": 100, "data": {"GID": 2, "PID": 0}}
+        data = fake.requests[1]["data"]
+        assert [data[f"UI{i}"] for i in range(1, 6)] == [100, 117, 0, 78, 56]
+        assert hass.states.get(f"number.{PREFIX}_color").state == "46"
+
+
+async def test_spectrum_change_at_night_stays_dark(hass: HomeAssistant, fake, freezer) -> None:
+    freezer.move_to("2026-11-27 19:00:00+00:00")
+    async with fake:
+        await setup(hass, fake)
+        fake.requests.clear()
+        await hass.services.async_call(
+            "number", "set_value", {"entity_id": f"number.{PREFIX}_red", "value": 40}, blocking=True
+        )
+        data = fake.requests[-1]["data"]
+        assert data["UI1"] == 0
+        assert data["UI4"] == 40

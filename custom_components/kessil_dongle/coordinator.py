@@ -22,7 +22,7 @@ from .api import (
     Program,
     SystemInfo,
 )
-from .const import DOMAIN, SCAN_INTERVAL, SLOW_REFRESH_EVERY
+from .const import CH_INTENSITY, DOMAIN, SCAN_INTERVAL, SLOW_REFRESH_EVERY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,10 +115,14 @@ class KessilCoordinator(DataUpdateCoordinator[KessilData]):
         """Switch the group to manual (if needed) and set channel values.
 
         Channels not in `changes` keep their current value, so switching from
-        a running program keeps the program's current look.
+        a running program keeps the program's current look. If the lamps are
+        dark (e.g. night in the program), the spectrum channels come from the
+        stored manual values instead of the program's zeros.
         """
         group = self.data.groups[gid]
         ui = list(self.current_ui(gid))
+        if ui[CH_INTENSITY] == 0:
+            ui = [0, *group.ui[1:]]
         for idx, value in changes.items():
             ui[idx] = max(0, min(255, int(value)))
         try:
