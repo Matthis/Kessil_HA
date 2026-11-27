@@ -10,10 +10,10 @@
  */
 
 const DOMAIN = "kessil_dongle";
-const CARD_VERSION = "0.1.2";
+const CARD_VERSION = "0.1.3";
 
 const CHANNELS = [
-  { key: "color", label: { de: "Farbe", en: "Color" }, track: "linear-gradient(90deg,#ffe3a8,#ffffff,#8ecbff)", index: 1 },
+  { key: "color", label: { de: "Lichtfarbe", en: "Light color" }, track: "linear-gradient(90deg,#ffe3a8,#ffffff,#8ecbff)", index: 1 },
   { key: "red", label: { de: "Rot", en: "Red" }, track: "linear-gradient(90deg,#3a1414,#e53935)", index: 3 },
   { key: "amber", label: { de: "Amber", en: "Amber" }, track: "linear-gradient(90deg,#3a2410,#f5761a)", index: 4 },
 ];
@@ -311,7 +311,7 @@ class KessilCard extends HTMLElement {
       <div class="curve">
         <div class="curve-head">
           <span>${t("Tageskurve", "Daily curve")}: ${escapeHtml(name)}</span>
-          <span class="legend"><i class="l-int"></i>${t("Intensität", "Intensity")} <i class="l-col"></i>${t("Farbe", "Color")}</span>
+          <span class="legend"><i class="l-int"></i>${t("Intensität", "Intensity")} <i class="l-col"></i>${t("Lichtfarbe", "Light color")}</span>
         </div>
         <svg viewBox="0 0 ${W} ${H + 16}" preserveAspectRatio="none">
           <line class="grid" x1="${PAD}" x2="${W - PAD}" y1="${y(0)}" y2="${y(0)}"></line>

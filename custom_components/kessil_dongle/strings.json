@@ -23,7 +23,7 @@
         "name": "Intensity"
       },
       "color": {
-        "name": "Color"
+        "name": "Light color"
       },
       "red": {
         "name": "Red"

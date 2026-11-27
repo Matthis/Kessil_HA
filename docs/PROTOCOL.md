@@ -107,7 +107,7 @@ Program-list keys per type: `Z2T` (0), `TB` (1), `TS` (2), `RF` (3).
 | Index | Field in dtype 3 | Channel | Range |
 |---|---|---|---|
 | 0 | `UI1` | Intensity | 0–255 |
-| 1 | `UI2` | Color | 0–255 |
+| 1 | `UI2` | Light color (warm → cool white) | 0–255 |
 | 2 | `UI3` | unused | 0 |
 | 3 | `UI4` | Red | 0–100 |
 | 4 | `UI5` | Amber | 0–100 |

@@ -73,7 +73,7 @@ async def test_entities_created(hass: HomeAssistant, fake) -> None:
         assert light.attributes["manual"] is False
 
         assert hass.states.get(f"number.{PREFIX}_intensity").state == "80"
-        assert hass.states.get(f"number.{PREFIX}_color").state == "100"
+        assert hass.states.get(f"number.{PREFIX}_light_color").state == "100"
         assert hass.states.get(f"number.{PREFIX}_red").state == "30"
         assert hass.states.get(f"number.{PREFIX}_amber").state == "0"
 
@@ -225,7 +225,7 @@ async def test_turn_on_at_night_uses_stored_spectrum(hass: HomeAssistant, fake, 
         assert fake.requests[0] == {"dtype": 100, "data": {"GID": 2, "PID": 0}}
         data = fake.requests[1]["data"]
         assert [data[f"UI{i}"] for i in range(1, 6)] == [100, 117, 0, 78, 56]
-        assert hass.states.get(f"number.{PREFIX}_color").state == "46"
+        assert hass.states.get(f"number.{PREFIX}_light_color").state == "46"
 
 
 async def test_spectrum_change_at_night_stays_dark(hass: HomeAssistant, fake, freezer) -> None:

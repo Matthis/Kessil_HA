@@ -14,7 +14,7 @@ Per lamp group on the dongle:
 | Entity | What it does |
 |---|---|
 | `light` | On/off and intensity. Any change switches the group to manual mode. |
-| `number` Intensity / Color / Red / Amber | Channels in % (Tuna Sun) |
+| `number` Intensity / Light color / Red / Amber | Channels in % (Tuna Sun) |
 | `select` Mode | `Manual` or one of the programs stored on the dongle |
 | `sensor` Lamps | Number of lamps in the group (diagnostic) |
 
@@ -56,12 +56,12 @@ entity: light.kessil_tuna_sun_group
 name: Aquarium   # optional
 ```
 
-The other entities (color, red, amber, mode) are found automatically through the
+The other entities (light color, red, amber, mode) are found automatically through the
 light's device.
 
 - Drag the ring to set the intensity, tap the centre to toggle on/off.
 - Changing intensity or a slider switches to manual mode; tap a program to return.
-- The daily curve shows intensity (solid) and color (dashed) of the running
+- The daily curve shows intensity (solid) and light color (dashed) of the running
   program – or of the first program while in manual mode – with a marker for now.
 
 ## Notes
