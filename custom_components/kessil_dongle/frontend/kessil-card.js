@@ -10,7 +10,7 @@
  */
 
 const DOMAIN = "kessil_dongle";
-const CARD_VERSION = "0.1.13";
+const CARD_VERSION = "0.1.14";
 
 const CHANNELS = [
   { key: "intensity", label: { de: "Intensität", en: "Intensity" }, track: "linear-gradient(90deg,#16202c,#4fc3f7)", index: 0 },
@@ -20,10 +20,12 @@ const CHANNELS = [
   { key: "amber", label: { de: "Amber", en: "Amber" }, track: "linear-gradient(90deg,#3a2410,#f5761a)", index: 4 },
 ];
 
-// Color temperature range per lamp model, shown under the slider only if every
-// lamp in the group is one of these models (from manufacturer specifications).
+// Color temperature range per lamp type (groups on the dongle are per type).
+// Tuna Sun: 6000-9000 K for all Tuna Sun models per manufacturer specs.
+// Tuna Blue is left out on purpose: specs disagree and its channel mapping on
+// the dongle is unverified.
 const KELVIN_RANGES = {
-  "A360X Tuna Sun": [6000, 9000],
+  "Tuna Sun": [6000, 9000],
 };
 
 const pct = (raw) => Math.round((raw * 100) / 255);
@@ -164,7 +166,7 @@ class KessilCard extends HTMLElement {
       curveName = modeState.state;
     }
 
-    const kelvin = kelvinRange(light.attributes.lamp_models);
+    const kelvin = KELVIN_RANGES[light.attributes.lamp_type] || null;
     const fmtK = (k) => `${k} K`;
     const sliders = CHANNELS.filter((c) => (related[c.key] && hass.states[related[c.key]]) || c.key === "intensity")
       .map((c) => {
@@ -313,15 +315,6 @@ const STORM_ICON = `<svg viewBox="0 0 24 22" aria-hidden="true">
   <path d="M12.2 10.5 8.8 16.2h2.7l-1.3 5.3 4.9-7h-2.8l1.6-4z" fill="#f5b301"
         stroke="var(--card-background-color, #fff)" stroke-width="0.8" stroke-linejoin="round"/>
 </svg>`;
-
-/** Kelvin range if all lamps of the group share a known range, else null. */
-function kelvinRange(models) {
-  if (!Array.isArray(models) || models.length === 0) return null;
-  const ranges = models.map((m) => KELVIN_RANGES[m]);
-  if (ranges.some((r) => !r)) return null;
-  const [lo, hi] = ranges[0];
-  return ranges.every((r) => r[0] === lo && r[1] === hi) ? ranges[0] : null;
-}
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);

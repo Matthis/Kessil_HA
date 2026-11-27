@@ -3,7 +3,8 @@
 # Home Assistant (HA) Integration for Kessil Wifi Dongle
 
 Unofficial, local-only Home Assistant integration for the **Kessil WiFi dongle**
-(KSAWD01), developed with **A360X Tuna Sun** lamps. Includes a Lovelace card with mode
+(KSAWD01), developed with **A360X Tuna Sun** lamps. The KSAWD01 works with the
+A360X, A360XE and A500X (via K-Link); only Tuna Sun has been tested. Includes a Lovelace card with mode
 buttons, the daily curve and channel sliders.
 
 > Not affiliated with or endorsed by Kessil. "Kessil" is used only to describe
@@ -83,9 +84,9 @@ automatically through the light's device.
   with intensity (solid), color temperature (dashed), a marker for now and a
   cloud-with-lightning symbol where the program has a thunderstorm effect. In manual
   mode the curve is a constant line at the current values.
-- Below: sliders for intensity, color temperature, red and amber. For groups made
-  only of A360X Tuna Sun lamps the color temperature slider shows the lamp's range
-  (warm 6000 K – 9000 K cool); other lamp types get a neutral "Spectrum" slider. Moving one switches
+- Below: sliders for intensity, color temperature, red and amber. For Tuna Sun groups
+  the color temperature slider shows the range (warm 6000 K – 9000 K cool); other
+  lamp types get a neutral "Spectrum" slider. Moving one switches
   to manual mode, starting from the manual values stored in the dongle.
 
 ## Example program: Natural Day

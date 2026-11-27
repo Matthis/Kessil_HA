@@ -8,6 +8,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEnti
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .api import TYPE_NAMES
 from .const import CH_INTENSITY, DEFAULT_BRIGHTNESS, light_channels
 from .coordinator import KessilConfigEntry, KessilCoordinator
 from .entity import KessilGroupEntity
@@ -65,6 +66,7 @@ class KessilLight(KessilGroupEntity, LightEntity):
         return {
             "manual": self.group.is_manual,
             "group_id": self.gid,
+            "lamp_type": TYPE_NAMES.get(self.group.type),
             "lamp_models": sorted({lamp.model for lamp in lamps if lamp.gid == self.gid}),
         }
 
