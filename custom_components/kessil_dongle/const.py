@@ -18,11 +18,13 @@ CH_COLOR: Final = 1
 CH_RED: Final = 3
 CH_AMBER: Final = 4
 
-# type -> extra channels (besides intensity) exposed as number entities
-EXTRA_CHANNELS: Final[dict[int, dict[str, int]]] = {
-    2: {"color": CH_COLOR, "red": CH_RED, "amber": CH_AMBER},  # Tuna Sun
+# type -> extra channels (besides intensity) exposed as number entities:
+# key -> (index, maximum raw value). Intensity and color go to 255; on Tuna Sun
+# the dongle rejects red/amber above 100 ("Invalid command format").
+EXTRA_CHANNELS: Final[dict[int, dict[str, tuple[int, int]]]] = {
+    2: {"color": (CH_COLOR, 255), "red": (CH_RED, 100), "amber": (CH_AMBER, 100)},  # Tuna Sun
 }
-DEFAULT_EXTRA_CHANNELS: Final[dict[str, int]] = {"color": CH_COLOR}
+DEFAULT_EXTRA_CHANNELS: Final[dict[str, tuple[int, int]]] = {"color": (CH_COLOR, 255)}
 
 DEFAULT_BRIGHTNESS: Final = 128
 

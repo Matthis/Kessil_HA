@@ -18,7 +18,10 @@ Per lamp group on the dongle:
 | `select` Mode | `Manual` or one of the programs stored on the dongle |
 | `sensor` Lamps | Number of lamps in the group (diagnostic) |
 
-Per lamp: overheat status (diagnostic). Devices: dongle → group → lamps.
+Plus one overheat status sensor per lamp (diagnostic).
+
+Each lamp group becomes one device, named after the lamp model
+(e.g. *Kessil A360X Tuna Sun*). The dongle itself and single lamps are not separate devices.
 
 Communication is local TCP (port 8888), polled every 60 seconds. No cloud, no app
 needed after the dongle has been set up once.
@@ -29,7 +32,7 @@ needed after the dongle has been set up once.
 
 1. HACS → ⋮ → *Custom repositories* → add `https://github.com/Matthis/Kessil_HA`,
    category *Integration*.
-2. Install **Kessil WiFi Dongle (unofficial)** and restart Home Assistant.
+2. Install **Kessil WiFi Dongle** and restart Home Assistant.
 
 ### Manual
 
@@ -49,7 +52,7 @@ resource needed.
 
 ```yaml
 type: custom:kessil-card
-entity: light.default_ts
+entity: light.kessil_a360x_tuna_sun
 name: Aquarium   # optional
 ```
 

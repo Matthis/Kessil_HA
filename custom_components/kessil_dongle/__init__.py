@@ -54,40 +54,45 @@ async def async_unload_entry(hass: HomeAssistant, entry: KessilConfigEntry) -> b
 def _register_devices(
     hass: HomeAssistant, entry: KessilConfigEntry, coordinator: KessilCoordinator
 ) -> None:
-    """Dongle → groups → lamps, registered in order so via_device resolves."""
+    """One device per lamp group; the dongle and single lamps are not devices.
+
+    Devices left over from earlier versions (dongle hub, one device per lamp)
+    are removed from this config entry.
+    """
     registry = dr.async_get(hass)
     system = coordinator.data.system
-    hub = (DOMAIN, system.serial)
-    registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={hub},
-        manufacturer=MANUFACTURER,
-        model="WiFi Dongle",
-        name="Kessil WiFi Dongle",
-        serial_number=system.serial,
-        sw_version=system.firmware,
-        configuration_url=None,
-    )
+    names = group_device_names(coordinator)
+    keep: set[str] = set()
     for group in coordinator.data.groups.values():
-        registry.async_get_or_create(
+        lamps = [lamp for lamp in system.lamps if lamp.gid == group.gid]
+        models = sorted({lamp.model for lamp in lamps})
+        device = registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={group_identifier(system.serial, group.gid)},
             manufacturer=MANUFACTURER,
-            model=f"Lamp group ({TYPE_NAMES.get(group.type, group.type)})",
-            name=group.name or f"Kessil group {group.gid}",
-            via_device=hub,
+            model=" / ".join(models) or TYPE_NAMES.get(group.type, "Lamp group"),
+            name=names[group.gid],
+            sw_version=f"Dongle {system.firmware}",
+            serial_number=system.serial,
         )
-    for lamp in system.lamps:
-        registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, f"lamp_{lamp.kid}")},
-            manufacturer=MANUFACTURER,
-            model=lamp.model,
-            name=f"{lamp.model} {lamp.kid}",
-            serial_number=str(lamp.kid),
-            sw_version=lamp.firmware,
-            via_device=group_identifier(system.serial, lamp.gid),
-        )
+        keep.add(device.id)
+    for device in dr.async_entries_for_config_entry(registry, entry.entry_id):
+        if device.id not in keep:
+            registry.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+
+
+def group_device_names(coordinator: KessilCoordinator) -> dict[int, str]:
+    """ "Kessil <lamp model>", plus the dongle's group name if that is ambiguous."""
+    system = coordinator.data.system
+    base: dict[int, str] = {}
+    for gid, group in coordinator.data.groups.items():
+        models = sorted({lamp.model for lamp in system.lamps if lamp.gid == gid})
+        base[gid] = f"Kessil {models[0]}" if len(models) == 1 else f"Kessil {group.name}"
+    counts = {name: list(base.values()).count(name) for name in base.values()}
+    return {
+        gid: f"{name} ({coordinator.data.groups[gid].name})" if counts[name] > 1 else name
+        for gid, name in base.items()
+    }
 
 
 def group_identifier(serial: str, gid: int) -> tuple[str, str]:

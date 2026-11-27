@@ -19,19 +19,31 @@
   },
   "entity": {
     "number": {
-      "color": { "name": "Farbe" },
-      "red": { "name": "Rot" },
-      "amber": { "name": "Amber" }
+      "color": {
+        "name": "Farbe"
+      },
+      "red": {
+        "name": "Rot"
+      },
+      "amber": {
+        "name": "Amber"
+      }
     },
     "select": {
       "mode": {
         "name": "Modus",
-        "state": { "manual": "Manuell" }
+        "state": {
+          "manual": "Manuell"
+        }
       }
     },
     "sensor": {
-      "lamp_count": { "name": "Lampen" },
-      "overheat": { "name": "Überhitzungsstatus" }
+      "lamp_count": {
+        "name": "Lampen"
+      },
+      "overheat": {
+        "name": "Überhitzungsstatus Lampe {lamp}"
+      }
     }
   }
 }

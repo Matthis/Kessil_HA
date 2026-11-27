@@ -10,7 +10,7 @@
  */
 
 const DOMAIN = "kessil_dongle";
-const CARD_VERSION = "0.1.0";
+const CARD_VERSION = "0.1.1";
 
 const CHANNELS = [
   { key: "color", label: { de: "Farbe", en: "Color" }, track: "linear-gradient(90deg,#ffe3a8,#ffffff,#8ecbff)", index: 1 },

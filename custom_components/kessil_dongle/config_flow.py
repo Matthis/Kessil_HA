@@ -37,7 +37,7 @@ class KessilConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host, CONF_PORT: port})
                 return self.async_create_entry(
-                    title=f"Kessil Dongle {serial}",
+                    title=f"Kessil WiFi Dongle {serial}",
                     data={CONF_HOST: host, CONF_PORT: port},
                 )
         return self.async_show_form(

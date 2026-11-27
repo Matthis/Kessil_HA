@@ -104,15 +104,17 @@ Program-list keys per type: `Z2T` (0), `TB` (1), `TS` (2), `RF` (3).
 
 ### Channels for Tuna Sun (type 2)
 
-| Index | Field in dtype 3 | Channel |
-|---|---|---|
-| 0 | `UI1` | Intensity |
-| 1 | `UI2` | Color |
-| 2 | `UI3` | unused |
-| 3 | `UI4` | Red |
-| 4 | `UI5` | Amber |
+| Index | Field in dtype 3 | Channel | Range |
+|---|---|---|---|
+| 0 | `UI1` | Intensity | 0–255 |
+| 1 | `UI2` | Color | 0–255 |
+| 2 | `UI3` | unused | 0 |
+| 3 | `UI4` | Red | 0–100 |
+| 4 | `UI5` | Amber | 0–100 |
 
-All values 0–255; percent = `round(raw / 255 * 100)`.
+Values above 100 for red or amber are rejected with
+`{"msg":"Invalid command format","code":-1}`. Percent for intensity and color is
+`round(raw / 255 * 100)`; red and amber are already percent.
 
 ### 105 – program IDs
 

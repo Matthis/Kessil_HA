@@ -14,12 +14,12 @@ from .entity import KessilGroupEntity
 PARALLEL_UPDATES = 1
 
 
-def raw_to_percent(raw: int) -> int:
-    return round(raw * 100 / 255)
+def raw_to_percent(raw: int, maximum: int = 255) -> int:
+    return max(0, min(100, round(raw * 100 / maximum)))
 
 
-def percent_to_raw(percent: float) -> int:
-    return max(0, min(255, round(percent * 255 / 100)))
+def percent_to_raw(percent: float, maximum: int = 255) -> int:
+    return max(0, min(maximum, round(percent * maximum / 100)))
 
 
 async def async_setup_entry(
@@ -29,9 +29,9 @@ async def async_setup_entry(
 ) -> None:
     coordinator = entry.runtime_data
     async_add_entities(
-        KessilChannelNumber(coordinator, gid, key, idx)
+        KessilChannelNumber(coordinator, gid, key, idx, maximum)
         for gid, group in coordinator.data.groups.items()
-        for key, idx in EXTRA_CHANNELS.get(group.type, DEFAULT_EXTRA_CHANNELS).items()
+        for key, (idx, maximum) in EXTRA_CHANNELS.get(group.type, DEFAULT_EXTRA_CHANNELS).items()
     )
 
 
@@ -42,14 +42,18 @@ class KessilChannelNumber(KessilGroupEntity, NumberEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_mode = NumberMode.SLIDER
 
-    def __init__(self, coordinator: KessilCoordinator, gid: int, key: str, index: int) -> None:
+    def __init__(
+        self, coordinator: KessilCoordinator, gid: int, key: str, index: int, maximum: int
+    ) -> None:
         super().__init__(coordinator, gid, key)
         self._attr_translation_key = key
         self._index = index
+        self._max = maximum
 
     @property
     def native_value(self) -> int:
-        return raw_to_percent(self.coordinator.current_ui(self.gid)[self._index])
+        return raw_to_percent(self.coordinator.current_ui(self.gid)[self._index], self._max)
 
     async def async_set_native_value(self, value: float) -> None:
-        await self.coordinator.async_set_channels(self.gid, {self._index: percent_to_raw(value)})
+        raw = percent_to_raw(value, self._max)
+        await self.coordinator.async_set_channels(self.gid, {self._index: raw})
