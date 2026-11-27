@@ -1,0 +1,3 @@
+{"msg":"Success",
+"code":0,
+"program":{"PID":1, "order":1,"type":2, "name":"Preset Tuna Sun","points":[{"minutes":480,"UI":[2,0,0,0,0], "eid":-1,"duration":30,"freq":1},{"minutes":540,"UI":[51,25,0,0,0], "eid":-1,"duration":30,"freq":1},{"minutes":660,"UI":[102,102,0,0,0], "eid":-1,"duration":30,"freq":1},{"minutes":780,"UI":[153,178,0,0,0], "eid":-1,"duration":30,"freq":1},{"minutes":900,"UI":[153,178,0,0,0], "eid":-1,"duration":30,"freq":1},{"minutes":1020,"UI":[102,127,0,0,0], "eid":-1,"duration":30,"freq":1},{"minutes":1140,"UI":[51,51,0,0,0], "eid":-1,"duration":30,"freq":1},{"minutes":1200,"UI":[0,0,0,0,0], "eid":-1,"duration":30,"freq":1}]}, "dType":106}

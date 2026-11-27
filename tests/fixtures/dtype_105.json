@@ -1,0 +1,3 @@
+{"msg":"Success",
+"code":0, "dType":105,
+"prog_ids":{"TB":[{"PID":0, "order":0},{"PID":1, "order":1}],"TS":[{"PID":0, "order":0},{"PID":1, "order":1},{"PID":3, "order":2}],"RF":[{"PID":0, "order":0},{"PID":1, "order":1},{"PID":2, "order":2}],"Z2T":[{"PID":0, "order":0},{"PID":1, "order":1}]}}

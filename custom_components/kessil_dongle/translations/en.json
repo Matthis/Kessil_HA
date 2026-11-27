@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kessil WiFi Dongle",
+        "description": "IP address of the dongle in your network (TCP port 8888 must be reachable from Home Assistant).",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the dongle. Check the IP address and that Home Assistant can reach TCP port 8888."
+    },
+    "abort": {
+      "already_configured": "This dongle is already configured."
+    }
+  },
+  "entity": {
+    "number": {
+      "color": { "name": "Color" },
+      "red": { "name": "Red" },
+      "amber": { "name": "Amber" }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": { "manual": "Manual" }
+      }
+    },
+    "sensor": {
+      "lamp_count": { "name": "Lamps" },
+      "overheat": { "name": "Overheat status" }
+    }
+  }
+}

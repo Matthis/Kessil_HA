@@ -1,0 +1,7 @@
+{"code":0,"msg":"Success", "dType":114,"sn":"DONGLE0001", "ver":"1.5.13", "SSID":"MyIoTNetwork","ENC":"psk2", "timezone":"Europe/Berlin" , "demo":0, "BAND": 1,"lamps":[{"KID":10000001,
+"GID":2,"lGID":-1,"rGID":-1,"model":"A360X Tuna Sun",
+"FWVer":"1.3","type":2, "temp":0, "timestamp":1795804443},
+{"KID":10000002,
+"GID":2,"lGID":-1,"rGID":-1,"model":"A360X Tuna Sun",
+"FWVer":"1.5","type":2, "temp":0, "timestamp":1795804443}
+], "num_prog_ids":{"TB":[{"PID":0, "order":0},{"PID":1, "order":1}],"TS":[{"PID":0, "order":0},{"PID":1, "order":1},{"PID":3, "order":2}],"RF":[{"PID":0, "order":0},{"PID":1, "order":1},{"PID":2, "order":2}],"Z2T":[{"PID":0, "order":0},{"PID":1, "order":1}]}, "group_ids":[1,2,26,27]}

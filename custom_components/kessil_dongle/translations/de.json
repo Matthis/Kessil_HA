@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kessil WiFi-Dongle",
+        "description": "IP-Adresse des Dongles in deinem Netz (TCP-Port 8888 muss von Home Assistant aus erreichbar sein).",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Dongle nicht erreichbar. Prüfe die IP-Adresse und ob Home Assistant TCP-Port 8888 erreicht."
+    },
+    "abort": {
+      "already_configured": "Dieser Dongle ist bereits eingerichtet."
+    }
+  },
+  "entity": {
+    "number": {
+      "color": { "name": "Farbe" },
+      "red": { "name": "Rot" },
+      "amber": { "name": "Amber" }
+    },
+    "select": {
+      "mode": {
+        "name": "Modus",
+        "state": { "manual": "Manuell" }
+      }
+    },
+    "sensor": {
+      "lamp_count": { "name": "Lampen" },
+      "overheat": { "name": "Überhitzungsstatus" }
+    }
+  }
+}

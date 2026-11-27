@@ -1,0 +1,3 @@
+{  "msg":"Success",
+  "code":0, "dType":102,
+  "group":{"gid":2, "pid":3, "eid":-1, "type":2, "hasLamps":2, "name":"Default TS","pause":0, "startDate":1774368396,"UI":[128,117,0,78,56],"accl":{"start":20, "period":14, "enabled":0, "startDate":1615050543, "stopDate":1615050592},"lunar":{"start":1200, "end":480, "high":120,"color":0, "phase":0, "enabled":0,"startDate":0, "stopDate":0}}}
