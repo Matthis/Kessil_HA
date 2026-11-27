@@ -107,7 +107,7 @@ Program-list keys per type: `Z2T` (0), `TB` (1), `TS` (2), `RF` (3).
 | Index | Field in dtype 3 | Channel | Range |
 |---|---|---|---|
 | 0 | `UI1` | Intensity | 0–255 |
-| 1 | `UI2` | Light color (warm → cool white) | 0–255 |
+| 1 | `UI2` | Color temperature (warm ≈ 6000 K → cool ≈ 9000 K) | 0–255 |
 | 2 | `UI3` | unused | 0 |
 | 3 | `UI4` | Red | 0–100 |
 | 4 | `UI5` | Amber | 0–100 |
@@ -140,7 +140,7 @@ Request `{"dtype":106,"data":{"PID":1,"type":2}}`:
 - `UI`: channel values at that point; the dongle fades between points.
 - `eid` ≥ 0 marks an effect at that point (`duration` in seconds, `freq`).
   `eid 0` is the thunderstorm effect (observed as a short dip in intensity and
-  light color in the curve).
+  color temperature in the curve).
 
 ## Control sequences
 

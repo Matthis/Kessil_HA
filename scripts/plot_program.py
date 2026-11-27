@@ -1,6 +1,6 @@
-"""Plot a reference program (dtype 106 response) above a program file.
+"""Plot a program file (dongle program format) as a daily curve.
 
-Usage: python scripts/plot_programs.py <reference.json> <program.json> <out.png>
+Usage: python scripts/plot_program.py <program.json> <out.png>
 Requires Pillow.
 """
 
@@ -14,7 +14,7 @@ W, PANEL_H, LEFT, RIGHT, TOP = 1400, 330, 70, 30, 50
 START, END = 6 * 60 + 30, 18 * 60  # visible time window in minutes
 SERIES = [  # channel, max raw value, color, label, line width
     (0, 255, (79, 195, 247), "Intensity", 4),
-    (1, 255, (190, 170, 120), "Light color", 2),
+    (1, 255, (190, 170, 120), "Color temperature", 2),
     (3, 100, (229, 57, 53), "Red (0-100)", 2),
     (4, 100, (245, 118, 26), "Amber (0-100)", 2),
 ]
@@ -62,26 +62,17 @@ def draw_panel(draw, top: int, points: list[dict], title: str, font, small) -> N
 
 
 def main() -> None:
-    reference = json.loads(Path(sys.argv[1]).read_text())["program"]["points"]
-    program = json.loads(Path(sys.argv[2]).read_text())
-    img = Image.new("RGB", (W, 2 * PANEL_H + 120), "white")
+    program = json.loads(Path(sys.argv[1]).read_text())
+    img = Image.new("RGB", (W, PANEL_H + 70), "white")
     draw = ImageDraw.Draw(img)
     font, small = load_font(20), load_font(16)
-    draw_panel(draw, 0, reference, "Default (reference)", font, small)
-    draw_panel(
-        draw,
-        PANEL_H + 20,
-        program["points"],
-        f"{program['name']} – same daily light amount, 07:30–17:00",
-        font,
-        small,
-    )
+    draw_panel(draw, 0, program["points"], program["name"], font, small)
     legend_x = LEFT
     for _, _, color, label, _ in SERIES:
-        draw.rectangle([legend_x, 2 * PANEL_H + 70, legend_x + 30, 2 * PANEL_H + 76], fill=color)
-        draw.text((legend_x + 38, 2 * PANEL_H + 62), label, fill="black", font=small)
-        legend_x += 200
-    img.save(sys.argv[3])
+        draw.rectangle([legend_x, PANEL_H + 20, legend_x + 30, PANEL_H + 26], fill=color)
+        draw.text((legend_x + 38, PANEL_H + 12), label, fill="black", font=small)
+        legend_x += 220
+    img.save(sys.argv[2])
 
 
 if __name__ == "__main__":

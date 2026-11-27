@@ -73,7 +73,7 @@ async def test_entities_created(hass: HomeAssistant, fake) -> None:
         assert light.attributes["manual"] is False
 
         assert hass.states.get(f"number.{PREFIX}_intensity").state == "80"
-        assert hass.states.get(f"number.{PREFIX}_light_color").state == "100"
+        assert hass.states.get(f"number.{PREFIX}_color_temperature").state == "100"
         assert hass.states.get(f"number.{PREFIX}_red").state == "30"
         assert hass.states.get(f"number.{PREFIX}_amber").state == "0"
 

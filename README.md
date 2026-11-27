@@ -16,7 +16,7 @@ Per lamp group on the dongle:
 | Entity | What it does |
 |---|---|
 | `light` | Operating state and intensity (see below). |
-| `number` Intensity / Light color / Red / Amber | Channels in % (Tuna Sun) |
+| `number` Intensity / Color temperature / Red / Amber | Channels in % (Tuna Sun) |
 | `select` Mode | `Manual` or one of the programs stored on the dongle |
 | `sensor` Lamps | Number of lamps in the group (diagnostic) |
 
@@ -63,6 +63,8 @@ dongle are in different VLANs, allow TCP 8888 from HA to the dongle.
 
 ## Lovelace card
 
+<img src="docs/images/card.png" alt="Kessil card in Home Assistant" width="420">
+
 The card is shipped with the integration and loaded automatically – no extra
 resource needed.
 
@@ -72,39 +74,40 @@ entity: light.kessil_group_tuna_sun
 name: Aquarium   # optional
 ```
 
-The other entities (intensity, light color, red, amber, mode) are found
+The other entities (intensity, color temperature, red, amber, mode) are found
 automatically through the light's device.
 
 - Top right: the daily light amount of the running program, in hours at full
   intensity (in manual mode: intensity × 24 h).
 - Top: mode buttons (manual or one of the dongle's programs) and the daily curve
-  with intensity (solid), light color (dashed), a marker for now and a
+  with intensity (solid), color temperature (dashed), a marker for now and a
   cloud-with-lightning symbol where the program has a thunderstorm effect. In manual
   mode the curve is a constant line at the current values.
-- Below: sliders for intensity, light color, red and amber. Moving one switches
+- Below: sliders for intensity, color temperature (warm ≈ 6000 K to cool ≈ 9000 K),
+  red and amber. Moving one switches
   to manual mode, starting from the manual values stored in the dongle.
 
 ## Example program: Natural Day
 
-[`programs/natural_day.json`](programs/natural_day.json) is a suggestion for a more
-natural daily curve for Tuna Sun. It keeps the frame of the dongle's "Default"
-program (light from 07:30 to 17:00) and the same daily light amount per channel
-(within 1.5 %), but shapes the day differently:
+[`programs/natural_day.json`](programs/natural_day.json) is a suggestion for a
+natural daily curve for Tuna Sun: light from 07:30 to 17:00 with a daily light
+amount of about 6 hours at full intensity, shaped like a real day.
 
-![Default vs. Natural Day](docs/images/natural_day.png)
+![Natural Day](docs/images/natural_day.png)
 
 | Time | What happens |
 |---|---|
 | 07:30–08:10 | Dawn: amber glows first, red joins; sunrise peak at 08:10 in deep orange (amber 100, red 52) with almost no intensity |
-| 08:10–10:00 | Morning: amber and red fade, intensity rises smoothly, light color moves from warm to white |
-| 10:00–13:05 | Midday: slow rise to the zenith at 13:05 (intensity 93 %, light color 71 %) |
+| 08:10–10:00 | Morning: amber and red fade, intensity rises smoothly, color temperature moves from warm to neutral |
+| 10:00–13:05 | Midday: slow rise to the zenith at 13:05 (intensity 93 %, color temperature 71 %) |
 | 13:10 | Thunderstorm: the dongle's own storm effect for 5 minutes, then it clears up |
 | 14:30–16:30 | Afternoon: gradually warmer and dimmer; sunset glow at 16:30 (amber 100, red 56) |
 | 16:30–17:00 | Dusk: red and amber fade out, night from 17:00 |
 
 The file uses the dongle's program format (points with `minutes`, `UI`, `eid`,
-`duration`, `freq`). It cannot be uploaded from Home Assistant yet; regenerate or
-adapt it with `scripts/natural_day.py` and compare with `scripts/plot_programs.py`.
+`duration`, `freq`). It cannot be uploaded from Home Assistant yet. Adapt it with
+`scripts/natural_day.py` (the shape table at the top; channel amounts are scaled to
+a reference program) and draw it with `scripts/plot_program.py`.
 
 ## Notes
 

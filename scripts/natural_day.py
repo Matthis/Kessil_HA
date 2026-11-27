@@ -12,7 +12,7 @@ import sys
 from itertools import pairwise
 from pathlib import Path
 
-# (hh:mm, intensity 0-1, light color 0-1, red 0-1, amber 0-1, thunderstorm)
+# (hh:mm, intensity 0-1, color temperature 0-1, red 0-1, amber 0-1, thunderstorm)
 SHAPE = [
     ("07:30", 0.00, 0.00, 0.00, 0.00, False),  # night
     ("07:40", 0.00, 0.00, 0.10, 0.25, False),  # first glow
@@ -36,7 +36,7 @@ SHAPE = [
 ]
 # channel index -> maximum raw value accepted by the dongle
 CAPS = {0: 255, 1: 255, 3: 100, 4: 100}
-NAMES = {0: "Intensity", 1: "Light color", 3: "Red", 4: "Amber"}
+NAMES = {0: "Intensity", 1: "Color temp.", 3: "Red", 4: "Amber"}
 
 
 def minutes(hhmm: str) -> int:
@@ -94,7 +94,7 @@ def main() -> None:
         i, c, _, r, a = p["UI"]
         time = f"{p['minutes'] // 60:02d}:{p['minutes'] % 60:02d}"
         storm = "  thunderstorm" if p["eid"] == 0 else ""
-        print(f"  {time}  I={i:3d} LC={c:3d} R={r:3d} A={a:3d}{storm}")
+        print(f"  {time}  I={i:3d} CT={c:3d} R={r:3d} A={a:3d}{storm}")
 
 
 if __name__ == "__main__":

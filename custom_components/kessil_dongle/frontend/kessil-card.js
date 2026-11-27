@@ -5,16 +5,17 @@
  *   entity: light.default_ts      # the group's light entity
  *   name: Aquarium                # optional
  *
- * Intensity, light color, red, amber and mode entities are found automatically
+ * Intensity, color temperature, red, amber and mode entities are found automatically
  * on the same device (via their translation keys).
  */
 
 const DOMAIN = "kessil_dongle";
-const CARD_VERSION = "0.1.11";
+const CARD_VERSION = "0.1.12";
 
 const CHANNELS = [
   { key: "intensity", label: { de: "Intensität", en: "Intensity" }, track: "linear-gradient(90deg,#16202c,#4fc3f7)", index: 0 },
-  { key: "color", label: { de: "Lichtfarbe", en: "Light color" }, track: "linear-gradient(90deg,#ffe3a8,#ffffff,#8ecbff)", index: 1 },
+  { key: "color", label: { de: "Farbtemperatur", en: "Color temperature" }, track: "linear-gradient(90deg,#ffd98a,#ffffff,#d9d4ff)", index: 1,
+    ends: { de: ["warm · 6000 K", "9000 K · kühl"], en: ["warm · 6000 K", "9000 K · cool"] } },
   { key: "red", label: { de: "Rot", en: "Red" }, track: "linear-gradient(90deg,#3a1414,#e53935)", index: 3 },
   { key: "amber", label: { de: "Amber", en: "Amber" }, track: "linear-gradient(90deg,#3a2410,#f5761a)", index: 4 },
 ];
@@ -166,6 +167,7 @@ class KessilCard extends HTMLElement {
             <div class="slider-head"><span>${c.label[lang]}</span><span class="val" data-val="${c.key}">${v} %</span></div>
             <input type="range" min="0" max="100" step="1" value="${v}" data-key="${c.key}"
                    style="--track:${c.track}" ${st && st.state === "unavailable" ? "disabled" : ""}>
+            ${c.ends ? `<div class="slider-ends"><span>${c.ends[lang][0]}</span><span>${c.ends[lang][1]}</span></div>` : ""}
           </div>`;
       })
       .join("");
@@ -271,7 +273,7 @@ class KessilCard extends HTMLElement {
       <div class="curve">
         <div class="curve-head">
           <span>${t("Tageskurve", "Daily curve")}: ${escapeHtml(name)}</span>
-          <span class="legend"><i class="l-int"></i>${t("Intensität", "Intensity")} <i class="l-col"></i>${t("Lichtfarbe", "Light color")}</span>
+          <span class="legend"><i class="l-int"></i>${t("Intensität", "Intensity")} <i class="l-col"></i>${t("Farbtemperatur", "Color temp.")}</span>
         </div>
         <div class="chart">
         ${effectIcons}
@@ -322,6 +324,7 @@ const STYLE = `
   .sliders { display: grid; gap: 10px; margin-top: 16px; }
   .slider-head { display: flex; justify-content: space-between; font-size: 0.9em; color: var(--secondary-text-color); }
   .slider-head .val { color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+  .slider-ends { display: flex; justify-content: space-between; font-size: 0.75em; color: var(--secondary-text-color); margin-top: 2px; }
   input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 5px;
                       background: var(--track); margin: 6px 0 0; outline: none; }
   input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;

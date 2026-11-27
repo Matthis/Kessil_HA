@@ -23,7 +23,7 @@
         "name": "Intensität"
       },
       "color": {
-        "name": "Lichtfarbe"
+        "name": "Farbtemperatur"
       },
       "red": {
         "name": "Rot"
