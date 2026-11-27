@@ -29,9 +29,11 @@ EXTRA_CHANNELS: Final[dict[int, dict[str, tuple[int, int]]]] = {
         "amber": (CH_AMBER, 100),
     },
 }
+# Other lamp types: the second channel shifts the spectrum (e.g. towards blue on
+# Tuna Blue), so it is not called color temperature there.
 DEFAULT_EXTRA_CHANNELS: Final[dict[str, tuple[int, int]]] = {
     "intensity": (CH_INTENSITY, 255),
-    "color": (CH_COLOR, 255),
+    "spectrum": (CH_COLOR, 255),
 }
 
 # Channels that emit light on their own. On Tuna Sun, red and amber are separate

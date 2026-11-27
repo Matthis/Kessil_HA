@@ -25,6 +25,9 @@
       "color": {
         "name": "Color temperature"
       },
+      "spectrum": {
+        "name": "Spectrum"
+      },
       "red": {
         "name": "Red"
       },

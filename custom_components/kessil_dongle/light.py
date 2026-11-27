@@ -61,7 +61,12 @@ class KessilLight(KessilGroupEntity, LightEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"manual": self.group.is_manual, "group_id": self.gid}
+        lamps = self.coordinator.data.system.lamps
+        return {
+            "manual": self.group.is_manual,
+            "group_id": self.gid,
+            "lamp_models": sorted({lamp.model for lamp in lamps if lamp.gid == self.gid}),
+        }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         brightness = kwargs.get(ATTR_BRIGHTNESS)

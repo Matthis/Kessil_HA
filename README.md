@@ -16,7 +16,7 @@ Per lamp group on the dongle:
 | Entity | What it does |
 |---|---|
 | `light` | Operating state and intensity (see below). |
-| `number` Intensity / Color temperature / Red / Amber | Channels in % (Tuna Sun) |
+| `number` Intensity / Color temperature / Red / Amber | Channels in % (Tuna Sun; other lamp types: Intensity / Spectrum) |
 | `select` Mode | `Manual` or one of the programs stored on the dongle |
 | `sensor` Lamps | Number of lamps in the group (diagnostic) |
 
@@ -83,8 +83,9 @@ automatically through the light's device.
   with intensity (solid), color temperature (dashed), a marker for now and a
   cloud-with-lightning symbol where the program has a thunderstorm effect. In manual
   mode the curve is a constant line at the current values.
-- Below: sliders for intensity, color temperature (warm ≈ 6000 K to cool ≈ 9000 K),
-  red and amber. Moving one switches
+- Below: sliders for intensity, color temperature, red and amber. For groups made
+  only of A360X Tuna Sun lamps the color temperature slider shows the lamp's range
+  (warm 6000 K – 9000 K cool); other lamp types get a neutral "Spectrum" slider. Moving one switches
   to manual mode, starting from the manual values stored in the dongle.
 
 ## Example program: Natural Day

@@ -25,6 +25,9 @@
       "color": {
         "name": "Farbtemperatur"
       },
+      "spectrum": {
+        "name": "Spektrum"
+      },
       "red": {
         "name": "Rot"
       },

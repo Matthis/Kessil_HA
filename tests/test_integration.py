@@ -71,6 +71,7 @@ async def test_entities_created(hass: HomeAssistant, fake) -> None:
         assert light.state == "on"
         assert light.attributes["brightness"] == 204  # from the curve, not the stored UI
         assert light.attributes["manual"] is False
+        assert light.attributes["lamp_models"] == ["A360X Tuna Sun"]
 
         assert hass.states.get(f"number.{PREFIX}_intensity").state == "80"
         assert hass.states.get(f"number.{PREFIX}_color_temperature").state == "100"

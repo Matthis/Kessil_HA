@@ -10,15 +10,21 @@
  */
 
 const DOMAIN = "kessil_dongle";
-const CARD_VERSION = "0.1.12";
+const CARD_VERSION = "0.1.13";
 
 const CHANNELS = [
   { key: "intensity", label: { de: "Intensität", en: "Intensity" }, track: "linear-gradient(90deg,#16202c,#4fc3f7)", index: 0 },
-  { key: "color", label: { de: "Farbtemperatur", en: "Color temperature" }, track: "linear-gradient(90deg,#ffd98a,#ffffff,#d9d4ff)", index: 1,
-    ends: { de: ["warm · 6000 K", "9000 K · kühl"], en: ["warm · 6000 K", "9000 K · cool"] } },
+  { key: "color", label: { de: "Farbtemperatur", en: "Color temperature" }, track: "linear-gradient(90deg,#ffd98a,#ffffff,#d9d4ff)", index: 1, kelvin: true },
+  { key: "spectrum", label: { de: "Spektrum", en: "Spectrum" }, track: "linear-gradient(90deg,#9e9e9e,#ffffff)", index: 1 },
   { key: "red", label: { de: "Rot", en: "Red" }, track: "linear-gradient(90deg,#3a1414,#e53935)", index: 3 },
   { key: "amber", label: { de: "Amber", en: "Amber" }, track: "linear-gradient(90deg,#3a2410,#f5761a)", index: 4 },
 ];
+
+// Color temperature range per lamp model, shown under the slider only if every
+// lamp in the group is one of these models (from manufacturer specifications).
+const KELVIN_RANGES = {
+  "A360X Tuna Sun": [6000, 9000],
+};
 
 const pct = (raw) => Math.round((raw * 100) / 255);
 
@@ -158,6 +164,8 @@ class KessilCard extends HTMLElement {
       curveName = modeState.state;
     }
 
+    const kelvin = kelvinRange(light.attributes.lamp_models);
+    const fmtK = (k) => `${k} K`;
     const sliders = CHANNELS.filter((c) => (related[c.key] && hass.states[related[c.key]]) || c.key === "intensity")
       .map((c) => {
         const st = related[c.key] ? hass.states[related[c.key]] : null;
@@ -167,7 +175,7 @@ class KessilCard extends HTMLElement {
             <div class="slider-head"><span>${c.label[lang]}</span><span class="val" data-val="${c.key}">${v} %</span></div>
             <input type="range" min="0" max="100" step="1" value="${v}" data-key="${c.key}"
                    style="--track:${c.track}" ${st && st.state === "unavailable" ? "disabled" : ""}>
-            ${c.ends ? `<div class="slider-ends"><span>${c.ends[lang][0]}</span><span>${c.ends[lang][1]}</span></div>` : ""}
+            ${c.kelvin && kelvin ? `<div class="slider-ends"><span>warm · ${fmtK(kelvin[0])}</span><span>${fmtK(kelvin[1])} · ${t("kühl", "cool")}</span></div>` : ""}
           </div>`;
       })
       .join("");
@@ -273,7 +281,7 @@ class KessilCard extends HTMLElement {
       <div class="curve">
         <div class="curve-head">
           <span>${t("Tageskurve", "Daily curve")}: ${escapeHtml(name)}</span>
-          <span class="legend"><i class="l-int"></i>${t("Intensität", "Intensity")} <i class="l-col"></i>${t("Farbtemperatur", "Color temp.")}</span>
+          <span class="legend"><i class="l-int"></i>${t("Intensität", "Intensity")} <i class="l-col"></i>${this._related().color ? t("Farbtemperatur", "Color temp.") : t("Spektrum", "Spectrum")}</span>
         </div>
         <div class="chart">
         ${effectIcons}
@@ -305,6 +313,15 @@ const STORM_ICON = `<svg viewBox="0 0 24 22" aria-hidden="true">
   <path d="M12.2 10.5 8.8 16.2h2.7l-1.3 5.3 4.9-7h-2.8l1.6-4z" fill="#f5b301"
         stroke="var(--card-background-color, #fff)" stroke-width="0.8" stroke-linejoin="round"/>
 </svg>`;
+
+/** Kelvin range if all lamps of the group share a known range, else null. */
+function kelvinRange(models) {
+  if (!Array.isArray(models) || models.length === 0) return null;
+  const ranges = models.map((m) => KELVIN_RANGES[m]);
+  if (ranges.some((r) => !r)) return null;
+  const [lo, hi] = ranges[0];
+  return ranges.every((r) => r[0] === lo && r[1] === hi) ? ranges[0] : null;
+}
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
