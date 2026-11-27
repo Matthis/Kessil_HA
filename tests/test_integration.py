@@ -200,6 +200,19 @@ async def test_select_program(hass: HomeAssistant, fake) -> None:
         assert fake.requests[1]["dtype"] == 102
 
 
+async def test_select_manual_applies_stored_values(hass: HomeAssistant, fake) -> None:
+    async with fake:
+        await setup(hass, fake)
+        fake.requests.clear()
+        await hass.services.async_call(
+            "select", "select_option", {"entity_id": MODE, "option": "manual"}, blocking=True
+        )
+        assert fake.requests[0] == {"dtype": 100, "data": {"GID": 2, "PID": 0}}
+        assert fake.requests[1]["dtype"] == 3
+        assert _ui(fake.requests[1]) == [128, 117, 0, 78, 56]
+        assert hass.states.get(MODE).state == "manual"
+
+
 async def test_setup_retry_when_unreachable(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id="X", data={CONF_HOST: "127.0.0.1", CONF_PORT: 1}

@@ -8,7 +8,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import MANUAL_PID, Program
+from .api import Program
 from .coordinator import KessilConfigEntry, KessilCoordinator
 from .entity import KessilGroupEntity
 
@@ -79,5 +79,9 @@ class KessilModeSelect(KessilGroupEntity, SelectEntity):
         }
 
     async def async_select_option(self, option: str) -> None:
-        pid = MANUAL_PID if option == OPTION_MANUAL else self._programs[option].pid
-        await self.coordinator.async_run_program(self.gid, pid)
+        if option == OPTION_MANUAL:
+            # dtype 100/PID 0 alone only switches the mode; the lamps keep their
+            # output until dtype 3 sends the stored manual values.
+            await self.coordinator.async_set_channels(self.gid, {})
+            return
+        await self.coordinator.async_run_program(self.gid, self._programs[option].pid)

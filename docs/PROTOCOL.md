@@ -93,7 +93,7 @@ groups that actually contain lamps are interesting.
 
 | Field | Meaning |
 |---|---|
-| `pid` | Active program. `0` or `-1` = manual. |
+| `pid` | Active program. `-1` = manual and applied (after dtype 3), `0` = manual selected via dtype 100 but values not applied yet. |
 | `type` | Lamp type: `0` 0-10V, `1` Tuna Blue, `2` Tuna Sun, `3` Refugium |
 | `hasLamps` | Number of lamps in the group |
 | `pause` | `1` while the group is paused |
@@ -146,11 +146,13 @@ Request `{"dtype":106,"data":{"PID":1,"type":2}}`:
 
 **Set the light manually (persistent)**
 
-1. `{"dtype":100,"data":{"GID":2,"PID":0}}` – switch the group to manual. The lamps
-   jump to the last stored manual values.
+1. `{"dtype":100,"data":{"GID":2,"PID":0}}` – switch the group to manual. This
+   only changes the mode (group reports `pid` `0`); the lamps keep their current
+   output and do **not** apply the stored manual values.
 2. `{"dtype":3,"data":{"GID":2,"UI1":128,"UI2":117,"UI3":0,"UI4":78,"UI5":56,"save":1,"enabled":1}}`
 
-   After this the group reports `pid` `-1`.
+   This sends the values to the lamps; afterwards the group reports `pid` `-1`.
+   To show the stored manual values, send them again with dtype 3.
 
 **Back to a program**: `{"dtype":100,"data":{"GID":2,"PID":3}}` – `UI` keeps the
 manual values from step 2 although the lamps follow the program again.
