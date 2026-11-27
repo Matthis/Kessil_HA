@@ -10,7 +10,7 @@
  */
 
 const DOMAIN = "kessil_dongle";
-const CARD_VERSION = "0.1.10";
+const CARD_VERSION = "0.1.11";
 
 const CHANNELS = [
   { key: "intensity", label: { de: "Intensität", en: "Intensity" }, track: "linear-gradient(90deg,#16202c,#4fc3f7)", index: 0 },
@@ -184,9 +184,7 @@ class KessilCard extends HTMLElement {
       <ha-card>
         <div class="header">
           <div class="title">${escapeHtml(name)}</div>
-          <div class="badge ${isManual ? "manual" : "program"}">${
-            isManual ? t("Manuell", "Manual") : escapeHtml(modeState?.state || t("Programm", "Program"))
-          }</div>
+          ${curve ? this._lightAmountBadge(curve, lang, t) : ""}
         </div>
 
         ${modes ? `<div class="modes">${modes}</div>` : ""}
@@ -222,6 +220,19 @@ class KessilCard extends HTMLElement {
         if (opt !== modeState.state) this._selectMode(related.mode, opt);
       })
     );
+  }
+
+  /** Daily light amount = hours at full intensity (integral of intensity over 24 h). */
+  _lightAmountBadge(points, lang, t) {
+    let sum = 0;
+    for (let m = 0; m < 1440; m++) sum += valueAt(points, m + 0.5, 1);
+    const hours = sum / 255 / 60;
+    const text = hours.toLocaleString(lang === "de" ? "de-DE" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const tip = t(
+      `Tageslichtmenge: entspricht ${text} Stunden bei voller Intensität`,
+      `Daily light amount: equals ${text} hours at full intensity`
+    );
+    return `<div class="badge amount" title="${escapeHtml(tip)}">${SUN_ICON}<span>${text} h</span></div>`;
   }
 
   _curveSvg(points, name, t) {
@@ -280,6 +291,11 @@ class KessilCard extends HTMLElement {
   }
 }
 
+const SUN_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/>
+  <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>
+  </g></svg>`;
+
 // Cloud with lightning bolt (original drawing), used to mark the thunderstorm effect.
 const STORM_ICON = `<svg viewBox="0 0 24 22" aria-hidden="true">
   <path d="M6.5 13.5a4.2 4.2 0 0 1-.4-8.38A5.6 5.6 0 0 1 16.9 4.3a4 4 0 0 1 .9 7.9 3 3 0 0 1-.8 1.3z"
@@ -299,8 +315,9 @@ const STYLE = `
   .title { font-size: 1.2em; font-weight: 500; color: var(--primary-text-color); }
   .badge { font-size: 0.8em; padding: 2px 10px; border-radius: 12px; white-space: nowrap;
            background: var(--secondary-background-color); color: var(--secondary-text-color); }
-  .badge.manual { background: rgba(245,118,26,0.15); color: #f5761a; }
-  .badge.program { background: rgba(var(--rgb-primary-color, 3,169,244),0.15); color: var(--primary-color); }
+  .badge.amount { display: inline-flex; align-items: center; gap: 5px; background: rgba(245,179,1,0.15);
+                  color: #c98a00; font-variant-numeric: tabular-nums; cursor: help; }
+  .badge.amount svg { width: 15px; height: 15px; }
 
   .sliders { display: grid; gap: 10px; margin-top: 16px; }
   .slider-head { display: flex; justify-content: space-between; font-size: 0.9em; color: var(--secondary-text-color); }
