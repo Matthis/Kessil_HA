@@ -21,3 +21,4 @@ node_modules/
 # Editors
 .idea/
 .vscode/
+backups/
