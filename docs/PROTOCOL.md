@@ -212,9 +212,10 @@ Request `{"dtype":101,"data":{"GID":2,"EID":101,"FREQ":1,"duration":60}}`:
 `EID -1` stops the effect. The response contains the group; its `eid` shows the
 running effect (`101`) and returns to `-1` after the stop.
 
-On two A360X Tuna Sun lamps no visible effect appeared, neither while a program
-was running nor in manual mode, although the dongle reported the effect as
-running. Effects inside a program (see `106`) do work.
+On two A360X Tuna Sun lamps no visible effect appeared, although the dongle
+reported the effect as running: tested while a program was running, in manual
+mode, and in manual mode dimmed to the level of a program's storm point
+(`EID 0`, `FREQ 0`, 120 s). Effects inside a program (see `106`) do work.
 
 ## Control sequences
 
