@@ -39,6 +39,7 @@ printf '{"dtype":117,"data":{}}' | nc -w 3 <dongle-ip> 8888
 | 3 | Set manual channel values ⚠️ | `GID`, `UI1`…`UI5`, `save`, `enabled` | ✅ |
 | 5 | List lamps | `{}` | ✅ |
 | 100 | Run program ⚠️ | `GID`, `PID` (`0` = manual) | ✅ |
+| 101 | Run effect now ⚠️ | `GID`, `EID`, `FREQ`, `duration` | accepted, no visible effect |
 | 102 | Group state | `GID` | ✅ |
 | 105 | Program IDs per lamp type | `{}` | ✅ |
 | 106 | Program details (curve points) | `PID`, `type` | ✅ |
@@ -142,9 +143,10 @@ Request `{"dtype":106,"data":{"PID":1,"type":2}}`:
 
 - `minutes`: minutes after midnight (dongle clock, see `timezone` in 114).
 - `UI`: channel values at that point; the dongle fades between points.
-- `eid` ≥ 0 marks an effect at that point (`duration` in seconds, `freq`).
-  `eid 0` is the thunderstorm effect (observed as a short dip in intensity and
-  color temperature in the curve).
+- `eid` ≥ 0 marks an effect at that point: `0` thunderstorm, `1` clouds,
+  `2` rainbow (Tuna Blue only), `3` aurora. `duration` is in seconds (30–300 in
+  steps of 30), `freq` is `0`–`2`. The thunderstorm in a running program has been
+  confirmed on A360X Tuna Sun lamps.
 
 ### 107 – save program
 
@@ -202,6 +204,17 @@ Position `0` belongs to the manual setting (`PID 0`).
 
 Request `{"dtype":110,"data":{"PID":4,"type":2,"name":"Renamed"}}`; the response
 contains the full program under `programs`. The same 32-character limit applies.
+
+### 101 – run effect now
+
+Request `{"dtype":101,"data":{"GID":2,"EID":101,"FREQ":1,"duration":60}}`:
+`EID` combines both values as `FREQ × 100 + effect`, `duration` is in seconds.
+`EID -1` stops the effect. The response contains the group; its `eid` shows the
+running effect (`101`) and returns to `-1` after the stop.
+
+On two A360X Tuna Sun lamps no visible effect appeared, neither while a program
+was running nor in manual mode, although the dongle reported the effect as
+running. Effects inside a program (see `106`) do work.
 
 ## Control sequences
 
