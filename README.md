@@ -92,24 +92,24 @@ automatically through the light's device.
 ## Example program: Natural Day
 
 [`programs/natural_day.json`](programs/natural_day.json) is a suggestion for a
-natural daily curve for Tuna Sun: light from 07:30 to 17:00 with a daily light
+natural daily curve for Tuna Sun: light from 08:00 to 19:00 with a daily light
 amount of about 6 hours at full intensity, shaped like a real day.
 
 ![Natural Day](docs/images/natural_day.png)
 
 | Time | What happens |
 |---|---|
-| 07:30–08:10 | Dawn: amber glows first, red joins; sunrise peak at 08:10 in deep orange (amber 100, red 52) with almost no intensity |
-| 08:10–10:00 | Morning: amber and red fade, intensity rises smoothly, color temperature moves from warm to neutral |
-| 10:00–13:05 | Midday: slow rise to the zenith at 13:05 (intensity 93 %, color temperature 71 %) |
-| 13:10 | Thunderstorm: the dongle's own storm effect for 5 minutes, then it clears up |
-| 14:30–16:30 | Afternoon: gradually warmer and dimmer; sunset glow at 16:30 (amber 100, red 56) |
-| 16:30–17:00 | Dusk: red and amber fade out, night from 17:00 |
+| 08:00–08:40 | Dawn: amber glows first, red joins; sunrise peak at 08:40 in deep orange (amber 92, red 46) with almost no intensity |
+| 08:40–10:30 | Morning: amber and red fade, intensity rises smoothly, color temperature moves from warm to neutral |
+| 10:30–13:30 | Midday: slow rise to the zenith at 13:30 (intensity 78 %, color temperature 61 %) |
+| 13:35 | Thunderstorm: the dongle's own storm effect for 5 minutes, then it clears up |
+| 15:40–18:30 | Afternoon: gradually warmer and dimmer; sunset glow at 18:30 (amber 92, red 49) |
+| 18:30–19:00 | Dusk: red and amber fade out, night from 19:00 |
 
 The file uses the dongle's program format (points with `minutes`, `UI`, `eid`,
 `duration`, `freq`). It cannot be uploaded from Home Assistant yet. Adapt it with
-`scripts/natural_day.py` (the shape table at the top; channel amounts are scaled to
-a reference program) and draw it with `scripts/plot_program.py`.
+`scripts/natural_day.py` (day start/end and the shape table at the top; channel
+amounts are scaled to a reference program) and draw it with `scripts/plot_program.py`.
 
 ## Roadmap
 

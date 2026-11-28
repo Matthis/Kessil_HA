@@ -11,7 +11,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 W, PANEL_H, LEFT, RIGHT, TOP = 1400, 330, 70, 30, 50
-START, END = 6 * 60 + 30, 18 * 60  # visible time window in minutes
+START, END = 7 * 60, 20 * 60  # visible time window in minutes
 SERIES = [  # channel, max raw value, color, label, line width
     (0, 255, (79, 195, 247), "Intensity", 4),
     (1, 255, (190, 170, 120), "Color temperature", 2),
@@ -38,7 +38,7 @@ def draw_panel(draw, top: int, points: list[dict], title: str, font, small) -> N
         return top + TOP + (1 - value / cap) * (PANEL_H - TOP - 40)
 
     draw.text((LEFT, top + 10), title, fill="black", font=font)
-    for hour in range(7, 19):
+    for hour in range(7, 21):
         x = x_pos(hour * 60)
         draw.line([(x, top + TOP), (x, top + PANEL_H - 40)], fill=(235, 235, 235))
         draw.text((x - 12, top + PANEL_H - 32), f"{hour}:00", fill=(110, 110, 110), font=small)

@@ -1,8 +1,8 @@
 """Generate the "Natural Day" example program (programs/natural_day.json).
 
-Frame and daily light amounts are taken from a reference program (the dongle's
-"Default" program, dtype 106 response): light from 07:30 to 17:00, each channel
-scaled so its daily amount matches the reference.
+Daily light amounts are taken from a reference program (a dtype 106 response):
+each channel is scaled so its daily amount matches the reference. The day runs
+from DAY_START to DAY_END (see ANCHORS for how the template is placed).
 
 Usage: python scripts/natural_day.py tests/fixtures/dtype_106_pid3.json programs
 """
@@ -12,6 +12,9 @@ import sys
 from itertools import pairwise
 from pathlib import Path
 
+DAY_START, DAY_END = "08:00", "19:00"
+
+# Relative shape on a 07:30-17:00 template day.
 # (hh:mm, intensity 0-1, color temperature 0-1, red 0-1, amber 0-1, thunderstorm)
 SHAPE = [
     ("07:30", 0.00, 0.00, 0.00, 0.00, False),  # night
@@ -24,7 +27,7 @@ SHAPE = [
     ("10:00", 0.86, 0.85, 0.10, 0.00, False),
     ("11:30", 0.97, 0.95, 0.10, 0.00, False),
     ("13:05", 1.00, 1.00, 0.10, 0.00, False),  # zenith
-    ("13:10", 0.18, 0.60, 0.10, 0.00, True),  # thunderstorm (dongle effect, 5 min)
+    ("13:10", 0.18, 0.60, 0.10, 0.00, True),  # thunderstorm (dongle effect, 5 min after zenith)
     ("13:20", 0.98, 0.95, 0.10, 0.00, False),  # clears up
     ("14:30", 0.90, 0.85, 0.12, 0.00, False),
     ("15:30", 0.70, 0.55, 0.25, 0.15, False),  # afternoon, warmer
@@ -44,6 +47,38 @@ def minutes(hhmm: str) -> int:
     return hours * 60 + mins
 
 
+# Template time -> target time anchors; times in between are interpolated linearly
+# (rounded to 5 minutes). Sunrise and sunset keep their length, the zenith
+# (and the storm right after it) moves to the middle of the day.
+ANCHORS = [
+    ("07:30", DAY_START),
+    ("08:45", "+75"),  # end of sunrise: 75 min after the start
+    ("13:05", "mid"),  # zenith
+    ("16:10", "-50"),  # start of sunset: 50 min before the end
+    ("17:00", DAY_END),
+]
+
+
+def place(hhmm: str) -> int:
+    """Map a template time to the configured day (minutes after midnight)."""
+    start, end = minutes(DAY_START), minutes(DAY_END)
+
+    def target(spec: str) -> int:
+        if spec == "mid":
+            return (start + end) // 2
+        if spec[0] in "+-":
+            return (start if spec[0] == "+" else end) + int(spec)
+        return minutes(spec)
+
+    anchors = [(minutes(a), target(b)) for a, b in ANCHORS]
+    t = minutes(hhmm)
+    for (a0, b0), (a1, b1) in pairwise(anchors):
+        if a0 <= t <= a1:
+            exact = b0 + (t - a0) * (b1 - b0) / (a1 - a0)
+            return round(exact) if t in (a0, a1) else round(exact / 5) * 5
+    raise ValueError(hhmm)
+
+
 def integral(points: list[dict], ch: int) -> float:
     """Daily amount of a channel (raw value x minutes, linear between points)."""
     pts = sorted(points, key=lambda p: p["minutes"])
@@ -53,7 +88,13 @@ def integral(points: list[dict], ch: int) -> float:
 
 
 def build(reference: list[dict]) -> dict:
-    relative = [{"minutes": minutes(t), "UI": [i, c, 0, r, a]} for t, i, c, r, a, _ in SHAPE]
+    relative = []
+    for t, i, c, r, a, storm in SHAPE:
+        # keep the storm's distance to the point before it, and the clearing after it
+        at = relative[-1]["minutes"] + 5 if storm else place(t)
+        if relative and SHAPE[len(relative) - 1][5]:
+            at = relative[-1]["minutes"] + 10
+        relative.append({"minutes": at, "UI": [i, c, 0, r, a]})
     scale = {
         ch: min(
             integral(reference, ch) / integral(relative, ch),
