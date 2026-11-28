@@ -51,5 +51,67 @@
         "name": "Überhitzungsstatus Lampe {lamp}"
       }
     }
+  },
+  "services": {
+    "export_programs": {
+      "name": "Programme exportieren",
+      "description": "Gibt alle im Dongle gespeicherten Programme für den Lampentyp einer Gruppe zurück, im Format von „Programm speichern“. Geeignet als Sicherung.",
+      "fields": {
+        "entity_id": {
+          "name": "Lampengruppe",
+          "description": "Licht-Entität der Kessil-Lampengruppe."
+        }
+      }
+    },
+    "save_program": {
+      "name": "Programm speichern",
+      "description": "Legt ein Programm im Dongle an oder überschreibt das eigene Programm mit gleichem Namen. Voreingestellte Programme werden nicht überschrieben. Das Programm wird nicht gestartet.",
+      "fields": {
+        "entity_id": {
+          "name": "Lampengruppe",
+          "description": "Licht-Entität der Kessil-Lampengruppe; das Programm wird für ihren Lampentyp gespeichert."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Programmname, höchstens 31 Bytes."
+        },
+        "points": {
+          "name": "Punkte",
+          "description": "2–20 Punkte: minutes (Minuten nach Mitternacht), UI (5 Kanalwerte), optional eid (Effekt: 0 Gewitter, 1 Wolken, 2 Regenbogen, 3 Polarlicht), duration (30–300 s) und freq (0–2). Mindestens ein Punkt braucht Intensität 0."
+        }
+      }
+    },
+    "rename_program": {
+      "name": "Programm umbenennen",
+      "description": "Benennt ein eigenes Programm im Dongle um. Voreingestellte Programme können nicht umbenannt werden.",
+      "fields": {
+        "entity_id": {
+          "name": "Lampengruppe",
+          "description": "Licht-Entität der Kessil-Lampengruppe."
+        },
+        "program": {
+          "name": "Programm",
+          "description": "Bisheriger Name des Programms."
+        },
+        "new_name": {
+          "name": "Neuer Name",
+          "description": "Neuer Programmname, höchstens 31 Bytes."
+        }
+      }
+    },
+    "delete_program": {
+      "name": "Programm löschen",
+      "description": "Löscht ein eigenes Programm aus dem Dongle. Voreingestellte und laufende Programme können nicht gelöscht werden.",
+      "fields": {
+        "entity_id": {
+          "name": "Lampengruppe",
+          "description": "Licht-Entität der Kessil-Lampengruppe."
+        },
+        "program": {
+          "name": "Programm",
+          "description": "Name des zu löschenden Programms."
+        }
+      }
+    }
   }
 }

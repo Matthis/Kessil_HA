@@ -21,7 +21,8 @@ Per lamp group on the dongle:
 | `select` Mode | `Manual` or one of the programs stored on the dongle |
 | `sensor` Lamps | Number of lamps in the group (diagnostic) |
 
-Plus one overheat status sensor per lamp (diagnostic).
+Plus one overheat status sensor per lamp (diagnostic), and actions to back up,
+save, rename and delete the dongle's programs (see [Program management](#program-management)).
 
 **On/off** shows the operating state rather than a power switch:
 
@@ -107,15 +108,63 @@ amount of about 6 hours at full intensity, shaped like a real day.
 | 18:30–19:00 | Dusk: red and amber fade out, night from 19:00 |
 
 The file uses the dongle's program format (points with `minutes`, `UI`, `eid`,
-`duration`, `freq`). It cannot be uploaded from Home Assistant yet. Adapt it with
+`duration`, `freq`); upload it with the `save_program` action (see below). Adapt it with
 `scripts/natural_day.py` (day start/end and the shape table at the top; channel
 amounts are scaled to a reference program) and draw it with `scripts/plot_program.py`.
 
+## Program management
+
+Actions to manage the programs stored in the dongle. They take any light entity
+of a Kessil lamp group and work on the programs of that group's lamp type.
+Writing actions change only the dongle's program list; they never start a
+program.
+
+| Action | What it does |
+|---|---|
+| `kessil_dongle.export_programs` | Returns all programs as data (back them up before changing anything) |
+| `kessil_dongle.save_program` | Creates a program, or overwrites your own program with the same name |
+| `kessil_dongle.rename_program` | Renames one of your programs |
+| `kessil_dongle.delete_program` | Deletes one of your programs (not while it is running) |
+
+Presets that come with the dongle (e.g. "Preset Tuna Sun") cannot be
+overwritten, renamed or deleted. Before anything is sent, the integration checks
+the limits of the dongle: 2–20 points, names up to 31 bytes, red and amber 0–100
+on Tuna Sun, and at least one point with intensity 0 (otherwise the light never
+goes off). The dongle itself does not check the name length, and longer names
+corrupt its program list.
+
+Example: upload [Natural Day](#example-program-natural-day). Paste the `points`
+from [`programs/natural_day.json`](programs/natural_day.json) in Developer
+tools → Actions:
+
+```yaml
+action: kessil_dongle.save_program
+data:
+  entity_id: light.kessil_group_tuna_sun
+  name: Natural Day
+  points:
+    - {minutes: 480, UI: [0, 0, 0, 0, 0]}
+    - {minutes: 815, UI: [36, 93, 0, 6, 0], eid: 0, duration: 300, freq: 0}
+    # ...
+    - {minutes: 1140, UI: [0, 0, 0, 0, 0]}
+```
+
+| Point field | Meaning |
+|---|---|
+| `minutes` | Minutes after midnight (dongle time zone) |
+| `UI` | 5 channel values; Tuna Sun: intensity 0–255, color temperature 0–255, unused, red 0–100, amber 0–100 |
+| `eid` | Optional effect at this point: `0` thunderstorm, `1` clouds, `3` aurora, `2` rainbow (Tuna Blue only) |
+| `duration`, `freq` | Effect length (30–300 s, steps of 30) and frequency (0–2) |
+
+The output of `export_programs` uses the same point format, so an exported
+program can be saved again as it is. The new program appears in the mode
+select after a few seconds.
+
 ## Roadmap
 
-- **Program management**: back up and restore the dongle's programs, create,
-  rename and delete programs from Home Assistant, and edit the daily curve in the
-  card (e.g. to upload [Natural Day](#example-program-natural-day)).
+- **Program editor in the card**: edit the daily curve of a program directly in
+  the Lovelace card (the actions above already cover saving, renaming and
+  deleting).
 - **Generated daily program**: sunrise and sunset following the real sun times
   and a random midday thunderstorm, written to the dongle once a day (so the
   lamps keep running on their own if Home Assistant is down).

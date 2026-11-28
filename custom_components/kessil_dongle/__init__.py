@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 from .api import DEFAULT_PORT, TYPE_NAMES, KessilDongle
 from .const import CARD_URL, DOMAIN, MANUFACTURER
 from .coordinator import KessilConfigEntry, KessilCoordinator
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.LIGHT,
@@ -29,11 +30,16 @@ CARD_FILE = Path(__file__).parent / "frontend" / "kessil-card.js"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Serve the bundled Lovelace card and load it in the frontend."""
+    """Register the program actions; serve the bundled Lovelace card."""
+    async_setup_services(hass)
+    await _async_setup_card(hass)
+    return True
+
+
+async def _async_setup_card(hass: HomeAssistant) -> None:
     await hass.http.async_register_static_paths([StaticPathConfig(CARD_URL, str(CARD_FILE), True)])
     version = await hass.async_add_executor_job(lambda: int(CARD_FILE.stat().st_mtime))
     add_extra_js_url(hass, f"{CARD_URL}?v={version}")
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KessilConfigEntry) -> bool:

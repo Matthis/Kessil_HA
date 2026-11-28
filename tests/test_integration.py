@@ -36,7 +36,7 @@ def no_frontend():
 
     with (
         patch.object(loader.Integration, "dependencies", property(deps)),
-        patch("custom_components.kessil_dongle.async_setup", return_value=True),
+        patch("custom_components.kessil_dongle._async_setup_card"),
     ):
         yield
 
@@ -268,3 +268,122 @@ async def test_red_only_counts_as_on(hass: HomeAssistant, fake) -> None:
         data = fake.requests[-1]["data"]
         assert [data[f"UI{i}"] for i in range(1, 6)] == [0, 117, 0, 0, 0]
         assert hass.states.get(LIGHT).state == "off"
+
+
+# --- program actions -----------------------------------------------------------
+
+POINTS = [
+    {"minutes": 480, "UI": [0, 0, 0, 0, 0]},
+    {"minutes": 720, "UI": [200, 150, 0, 10, 0], "eid": 0, "duration": 300, "freq": 0},
+    {"minutes": 1140, "UI": [0, 0, 0, 0, 0]},
+]
+
+
+def _ok(fake, *dtypes: int) -> None:
+    for dtype in dtypes:
+        fake.responses[(dtype, None)] = f'{{"msg":"Success","code":0,"dType":{dtype}}}'
+
+
+async def _call(hass, service, **data):
+    return await hass.services.async_call(
+        DOMAIN,
+        service,
+        {"entity_id": LIGHT, **data},
+        blocking=True,
+        return_response=service in ("export_programs", "save_program"),
+    )
+
+
+async def test_export_programs(hass: HomeAssistant, fake) -> None:
+    async with fake:
+        await setup(hass, fake)
+        result = await _call(hass, "export_programs")
+    assert result["lamp_type"] == "Tuna Sun"
+    assert [(p["name"], p["pid"], p["preset"]) for p in result["programs"]] == [
+        ("Preset Tuna Sun", 1, True),
+        ("Default", 3, False),
+    ]
+    assert result["programs"][1]["points"][5] == {
+        "minutes": 720,
+        "UI": [38, 153, 0, 20, 0],
+        "eid": 0,
+        "duration": 300,
+        "freq": 0,
+    }
+
+
+async def test_save_new_program_uses_free_pid(hass: HomeAssistant, fake) -> None:
+    _ok(fake, 107)
+    async with fake:
+        await setup(hass, fake)
+        fake.requests.clear()
+        result = await _call(hass, "save_program", name="Natural Day", points=POINTS)
+        save = fake.requests[0]
+        assert save["dtype"] == 107
+        assert (save["data"]["PID"], save["data"]["type"]) == (2, 2)
+        assert save["data"]["points"][1]["EID"] == 0
+        assert {r["dtype"] for r in fake.requests[1:]} == {114, 106}  # program list reloaded
+    assert result == {"name": "Natural Day", "pid": 2}
+
+
+async def test_save_overwrites_user_program_by_name(hass: HomeAssistant, fake) -> None:
+    _ok(fake, 107)
+    async with fake:
+        await setup(hass, fake)
+        fake.requests.clear()
+        result = await _call(hass, "save_program", name="Default", points=POINTS)
+    assert fake.requests[0]["data"]["PID"] == 3
+    assert result["pid"] == 3
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "message"),
+    [
+        ("save_program", {"name": "Preset Tuna Sun", "points": POINTS}, "preset"),
+        ("save_program", {"name": "x" * 40, "points": POINTS}, "too long"),
+        ("save_program", {"name": "New", "points": POINTS[1:2]}, "at least 2"),
+        ("rename_program", {"program": "Preset Tuna Sun", "new_name": "Mine"}, "preset"),
+        ("delete_program", {"program": "Preset Tuna Sun"}, "preset"),
+        ("delete_program", {"program": "Default"}, "running"),
+        ("delete_program", {"program": "Nope"}, "No program"),
+    ],
+)
+async def test_program_actions_refuse(hass: HomeAssistant, fake, service, data, message) -> None:
+    from homeassistant.exceptions import HomeAssistantError
+
+    async with fake:
+        await setup(hass, fake)
+        fake.requests.clear()
+        with pytest.raises(HomeAssistantError, match=message):
+            await _call(hass, service, **data)
+    assert not [r for r in fake.requests if r["dtype"] in (107, 108, 110)]
+
+
+async def test_rename_and_delete_program(hass: HomeAssistant, fake) -> None:
+    _ok(fake, 108, 110)
+    fake.responses[(102, 2)] = fake.responses[(102, 2)].replace('"pid":3', '"pid":-1')
+    async with fake:
+        await setup(hass, fake)
+        fake.requests.clear()
+        await _call(hass, "rename_program", program="Default", new_name="My Day")
+        await _call(hass, "delete_program", program="Default")
+    writes = [(r["dtype"], r["data"]) for r in fake.requests if r["dtype"] in (108, 110)]
+    assert writes == [
+        (110, {"PID": 3, "type": 2, "name": "My Day"}),
+        (108, {"PID": 3, "type": 2}),
+    ]
+
+
+async def test_action_needs_kessil_entity(hass: HomeAssistant, fake) -> None:
+    from homeassistant.exceptions import ServiceValidationError
+
+    async with fake:
+        await setup(hass, fake)
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                DOMAIN,
+                "export_programs",
+                {"entity_id": "light.something_else"},
+                blocking=True,
+                return_response=True,
+            )

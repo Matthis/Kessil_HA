@@ -15,12 +15,16 @@ from homeassistant.util import dt as dt_util
 
 from .api import (
     MANUAL_PID,
+    MAX_PROGRAMS_PER_TYPE,
     TYPE_KEYS,
     Group,
     KessilDongle,
     KessilError,
     Program,
     SystemInfo,
+    is_preset,
+    parse_points,
+    validate_name,
 )
 from .const import DOMAIN, SCAN_INTERVAL, SLOW_REFRESH_EVERY
 
@@ -137,6 +141,74 @@ class KessilCoordinator(DataUpdateCoordinator[KessilData]):
         except KessilError as err:
             raise HomeAssistantError(f"Kessil dongle: {err}") from err
         self._store_group(group)
+
+    # --- program management (HA actions) -----------------------------------
+
+    def find_program(self, type_: int, name: str) -> Program:
+        """A program of this lamp type by name (or by "name (PID)" label)."""
+        programs = [p for (t, _), p in self.data.programs.items() if t == type_]
+        for program in programs:
+            if name in (program.name, f"{program.name} ({program.pid})"):
+                return program
+        raise HomeAssistantError(f"No program named '{name}' for this lamp type")
+
+    async def async_save_program(self, type_: int, name: str, raw_points: list[dict]) -> Program:
+        """Create a program, or overwrite the user program with the same name."""
+        try:
+            name = validate_name(name)
+            points = parse_points(raw_points, type_)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        existing = [p for (t, _), p in self.data.programs.items() if t == type_ and p.name == name]
+        if existing:
+            pid = existing[0].pid
+            if is_preset(type_, pid):
+                raise HomeAssistantError(f"'{name}' is a preset and cannot be overwritten")
+        else:
+            used = set(self.data.system.program_ids.get(TYPE_KEYS.get(type_, ""), ()))
+            if len(used - {MANUAL_PID}) >= MAX_PROGRAMS_PER_TYPE:
+                raise HomeAssistantError(
+                    f"The dongle already holds {MAX_PROGRAMS_PER_TYPE} programs for this lamp type"
+                )
+            pid = min(set(range(1, MAX_PROGRAMS_PER_TYPE + 2)) - used)
+        program = Program(pid=pid, type=type_, name=name, points=points)
+        await self._write(self.client.save_program(program))
+        return program
+
+    async def async_rename_program(self, type_: int, name: str, new_name: str) -> None:
+        program = self._user_program(type_, name, "renamed")
+        try:
+            new_name = validate_name(new_name)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        await self._write(self.client.rename_program(program.pid, type_, new_name))
+
+    async def async_delete_program(self, type_: int, name: str) -> None:
+        program = self._user_program(type_, name, "deleted")
+        running = [g for g in self.data.groups.values() if g.type == type_ and g.pid == program.pid]
+        if running:
+            raise HomeAssistantError(
+                f"'{program.name}' is running; switch the group to another mode first"
+            )
+        await self._write(self.client.delete_program(program.pid, type_))
+
+    def _user_program(self, type_: int, name: str, action: str) -> Program:
+        program = self.find_program(type_, name)
+        if is_preset(type_, program.pid):
+            raise HomeAssistantError(f"'{program.name}' is a preset and cannot be {action}")
+        return program
+
+    async def _write(self, command) -> None:
+        """Send a program command, then reload the program list."""
+        try:
+            await command
+            system = await self.client.get_system_info()
+            programs = await self._fetch_programs(system)
+        except KessilError as err:
+            raise HomeAssistantError(f"Kessil dongle: {err}") from err
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        self.async_set_updated_data(replace(self.data, system=system, programs=programs))
 
     def _store_group(self, group: Group) -> None:
         groups = dict(self.data.groups)

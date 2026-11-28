@@ -51,5 +51,67 @@
         "name": "Overheat status lamp {lamp}"
       }
     }
+  },
+  "services": {
+    "export_programs": {
+      "name": "Export programs",
+      "description": "Returns all programs stored in the dongle for the lamp type of a group, in the format save_program accepts. Use it as a backup.",
+      "fields": {
+        "entity_id": {
+          "name": "Lamp group",
+          "description": "Light entity of the Kessil lamp group."
+        }
+      }
+    },
+    "save_program": {
+      "name": "Save program",
+      "description": "Creates a program in the dongle, or overwrites the user program with the same name. Presets cannot be overwritten. The program is not started.",
+      "fields": {
+        "entity_id": {
+          "name": "Lamp group",
+          "description": "Light entity of the Kessil lamp group; the program is saved for its lamp type."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Program name, at most 31 bytes."
+        },
+        "points": {
+          "name": "Points",
+          "description": "2–20 points: minutes after midnight, UI (5 channel values), optional eid (effect: 0 thunderstorm, 1 clouds, 2 rainbow, 3 aurora), duration (30–300 s) and freq (0–2). At least one point needs intensity 0."
+        }
+      }
+    },
+    "rename_program": {
+      "name": "Rename program",
+      "description": "Renames a user program in the dongle. Presets cannot be renamed.",
+      "fields": {
+        "entity_id": {
+          "name": "Lamp group",
+          "description": "Light entity of the Kessil lamp group."
+        },
+        "program": {
+          "name": "Program",
+          "description": "Current name of the program."
+        },
+        "new_name": {
+          "name": "New name",
+          "description": "New program name, at most 31 bytes."
+        }
+      }
+    },
+    "delete_program": {
+      "name": "Delete program",
+      "description": "Deletes a user program from the dongle. Presets and running programs cannot be deleted.",
+      "fields": {
+        "entity_id": {
+          "name": "Lamp group",
+          "description": "Light entity of the Kessil lamp group."
+        },
+        "program": {
+          "name": "Program",
+          "description": "Name of the program to delete."
+        }
+      }
+    }
   }
 }
