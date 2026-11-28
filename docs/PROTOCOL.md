@@ -42,7 +42,10 @@ printf '{"dtype":117,"data":{}}' | nc -w 3 <dongle-ip> 8888
 | 102 | Group state | `GID` | ✅ |
 | 105 | Program IDs per lamp type | `{}` | ✅ |
 | 106 | Program details (curve points) | `PID`, `type` | ✅ |
-| 107 | Save program ⚠️ | `PID`, `type`, `name`, `points` | ✅ create |
+| 107 | Save program ⚠️ | `PID`, `type`, `name`, `points` | ✅ |
+| 108 | Delete program ⚠️ | `PID`, `type` | ✅ |
+| 109 | Move program in the list ⚠️ | `from`, `to`, `type` | ✅ |
+| 110 | Rename program ⚠️ | `PID`, `type`, `name` | ✅ |
 | 113 | Pause group ⚠️ | `GID`, `pause` (`1`/`0`) | ✅ accepted |
 | 114 | System info | `{}` | ✅ |
 | 117 | Dongle serial / siblings | `{}` | ✅ |
@@ -166,8 +169,39 @@ Request (one line on the wire):
 - **The effect id must be sent as `EID`** (upper case), although `106` returns
   it as `eid`. A lower-case `eid` is silently stored as `-1` (no effect), while
   `duration` and `freq` are kept.
-- 19 points were accepted; the maximum is not known yet.
+- **At most 20 points** per program; 21 points are rejected with code `-1`
+  (independent of the message length).
+- **Keep the name at 31 characters or less.** The dongle stores at most 32
+  characters and does not check the length: after saving a program with a
+  64-character name, an extra program with that (truncated) name and points
+  appeared under another lamp type, with a duplicate `order`. It looks like the
+  name overflowed into the program table. Deleting the stray entry with `108`
+  and fixing the order with `109` restored a consistent state; nothing else had
+  changed.
 - Saving does not start the program and does not change the light.
+
+### 108 – delete program
+
+Request `{"dtype":108,"data":{"PID":4,"type":2}}`:
+
+```json
+{"msg":"Success","code":0,"dType":108,"deleted":4,"type":2,"programs":{"TS":[{"PID":0,"order":0}, ...], ...}}
+```
+
+The response contains the program IDs of all lamp types (like `105`). Programs
+behind the deleted one move up one position in the order.
+
+### 109 – move program in the list
+
+Request `{"dtype":109,"data":{"from":1,"to":2,"type":3}}`: `from` and `to` are
+positions (`order`), not PIDs. The program at `from` moves to `to`, the ones in
+between shift by one. The response contains the program IDs of all types.
+Position `0` belongs to the manual setting (`PID 0`).
+
+### 110 – rename program
+
+Request `{"dtype":110,"data":{"PID":4,"type":2,"name":"Renamed"}}`; the response
+contains the full program under `programs`. The same 32-character limit applies.
 
 ## Control sequences
 
