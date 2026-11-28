@@ -42,6 +42,7 @@ printf '{"dtype":117,"data":{}}' | nc -w 3 <dongle-ip> 8888
 | 102 | Group state | `GID` | ✅ |
 | 105 | Program IDs per lamp type | `{}` | ✅ |
 | 106 | Program details (curve points) | `PID`, `type` | ✅ |
+| 107 | Save program ⚠️ | `PID`, `type`, `name`, `points` | ✅ create |
 | 113 | Pause group ⚠️ | `GID`, `pause` (`1`/`0`) | ✅ accepted |
 | 114 | System info | `{}` | ✅ |
 | 117 | Dongle serial / siblings | `{}` | ✅ |
@@ -141,6 +142,32 @@ Request `{"dtype":106,"data":{"PID":1,"type":2}}`:
 - `eid` ≥ 0 marks an effect at that point (`duration` in seconds, `freq`).
   `eid 0` is the thunderstorm effect (observed as a short dip in intensity and
   color temperature in the curve).
+
+### 107 – save program
+
+Request (one line on the wire):
+
+```json
+{"dtype":107,"data":{"PID":2,"type":2,"name":"Natural Day","points":[
+ {"minutes":480,"UI":[0,0,0,0,0],"eid":-1,"duration":30,"freq":1},
+ ...
+ {"minutes":815,"UI":[36,93,0,6,0],"EID":0,"duration":300,"freq":0},
+ ...
+ {"minutes":1140,"UI":[0,0,0,0,0],"eid":-1,"duration":30,"freq":1}]}}
+```
+
+```json
+{"msg":"Success","code":0,"dType":107,"programs":{"PID":2,"order":3,"type":2,"name":"Natural Day","points":[...]}}
+```
+
+- Creates the program under an unused `PID`; the dongle appends it to the end
+  of the order. Overwriting an existing `PID` replaces it (tested only on a
+  program created this way).
+- **The effect id must be sent as `EID`** (upper case), although `106` returns
+  it as `eid`. A lower-case `eid` is silently stored as `-1` (no effect), while
+  `duration` and `freq` are kept.
+- 19 points were accepted; the maximum is not known yet.
+- Saving does not start the program and does not change the light.
 
 ## Control sequences
 
