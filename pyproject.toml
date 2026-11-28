@@ -1,6 +1,6 @@
 [project]
 name = "kessil-ha"
-version = "0.2.0"
+version = "0.2.1"
 description = "Unofficial Home Assistant integration for the Kessil WiFi dongle"
 requires-python = ">=3.13"
 license = "MIT"

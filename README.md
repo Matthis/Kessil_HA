@@ -89,6 +89,10 @@ automatically through the light's device.
   the color temperature slider shows the range (warm 6000 K – 9000 K cool); other
   lamp types get a neutral "Spectrum" slider. Moving one switches
   to manual mode, starting from the manual values stored in the dongle.
+- The pencil at the end of the mode buttons opens the program list instead of
+  the sliders: rename, duplicate and delete programs (presets are read-only),
+  download a backup as a JSON file, and import a program or a backup from a
+  file, with a preview of its curve before it is saved to the dongle.
 
 ## Example program: Natural Day
 
